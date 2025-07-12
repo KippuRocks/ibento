@@ -2,6 +2,7 @@
   "name": "ibento",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -12,25 +13,30 @@
     "@auth0/nextjs-auth0": "^4.0.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@kippurocks/libticketto-papi": "1.0.7",
     "@mui/icons-material": "^7.0.0",
     "@mui/material": "^7.0.0",
+    "@polkadot-labs/hdkd": "^0.0.19",
+    "@ticketto/web-stub": "^1.4.7",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "next": "15.1.7",
     "next-intl": "^3.26.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-i18next": "^15.4.0",
-    "@ticketto/web-stub": "^1.4.3"
+    "react-i18next": "^15.4.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
     "postcss": "^8",
-    "typescript": "^5"
+    "qrcode": "^1.5.4",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   }
 }
