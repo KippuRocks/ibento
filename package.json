@@ -13,6 +13,7 @@
     "@auth0/nextjs-auth0": "^4.0.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@hookform/resolvers": "^5.1.1",
     "@kippurocks/libticketto-papi": "1.0.7",
     "@mui/icons-material": "^7.0.0",
     "@mui/material": "^7.0.0",
@@ -20,11 +21,15 @@
     "@ticketto/web-stub": "^1.4.7",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
+    "date-fns": "^4.1.0",
+    "mui-daterange-picker": "^1.0.5",
     "next": "15.1.7",
     "next-intl": "^3.26.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-i18next": "^15.4.0"
+    "react-hook-form": "^7.60.0",
+    "react-i18next": "^15.4.0",
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

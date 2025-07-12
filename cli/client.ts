@@ -8,13 +8,14 @@ import {
 
 import { TickettoClientBuilder } from "@ticketto/protocol";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
-import { keyring } from "./signer.js";
+import { keyring } from "./signer";
 
 // Setup the app authenticator.
 export const papiClient = createClient(
   getWsProvider(
     // "wss://testnet.kreivo.kippu.rocks",
-    "ws://127.0.0.1:21000"
+    //"ws://127.0.0.1:21000"
+    "wss://1cdf5e22d352.ngrok-free.app/"
   )
 );
 
@@ -34,7 +35,7 @@ export const client = await new TickettoClientBuilder()
         return Binary.fromHex(
           await payload.sign(keyring.Alice.signer)
         ).asBytes();
-      }
+      },
     } as KippuAccountProvider,
     consumerSettings: {
       client: papiClient,
