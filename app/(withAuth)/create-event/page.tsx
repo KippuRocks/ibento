@@ -17,11 +17,16 @@ import {
   IconButton,
   Divider,
   FormControl,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { DateRangePicker } from "mui-daterange-picker";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import type { SyntheticEvent } from "react";
+import { useRouter } from "next/navigation";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { client } from "@/cli/client";
+import { TickettoClientContext } from "@/app/providers/TickettoClientProvider";
 
 // ----------- Schema & Types ------------
 const dateRangeSchema = z.object({
@@ -53,12 +58,13 @@ type EventFormValues = z.infer<typeof eventFormSchema>;
 
 // ----------- Component ------------
 export default function EventForm() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
     control,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
@@ -67,51 +73,98 @@ export default function EventForm() {
     },
   });
 
+  const provider = useContext(TickettoClientContext);
+
   const [openPicker, setOpenPicker] = useState(false);
+  const [toast, setToast] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const { fields, append, remove } = useFieldArray({
     control,
     name: "ticketClasses",
   });
 
   const onSubmit = async (data: EventFormValues) => {
-    const eventId = await client.events.calls.createEvent({
-      capacity: BigInt(data.capacity),
-      metadata: {
-        banner: data.banner.item(0)?.webkitRelativePath,
-        description: data.description,
-      },
-      class: {
-        attendancePolicy: {
-          type: AttendancePolicyType.Single,
+    if (!provider) {
+      setToast({
+        open: true,
+        message: "Ticketto provider is not ready yet. Please try again.",
+        severity: "error",
+      });
+      return;
+    }
+
+    try {
+      const eventId = await provider.events.calls.createEvent({
+        capacity: BigInt(data.capacity),
+        metadata: {
+          banner: data.banner.item(0)?.webkitRelativePath,
+          description: data.description,
         },
-        ticketprice: {
-          amount: BigInt(data.ticketClasses[0].price),
-          asset: {
-            code: "dUSD",
-            decimals: 6,
-            id: 50_000_002,
+        class: {
+          attendancePolicy: {
+            type: AttendancePolicyType.Single,
+          },
+          ticketprice: {
+            amount: BigInt(data.ticketClasses[0].price),
+            asset: {
+              code: "dUSD",
+              decimals: 6,
+              id: 50_000_002,
+            },
+          },
+          ticketRestrictions: {
+            cannotResale: false,
+            cannotTransfer: false,
           },
         },
-        ticketRestrictions: {
-          cannotResale: false,
-          cannotTransfer: false,
-        },
-      },
-      name: data.name,
-
-      dates: [
-        [
-          BigInt(data.dates[0].from.getTime()),
-          BigInt(data.dates[0].to.getTime()),
+        name: data.name,
+        dates: [
+          [
+            BigInt(data.dates[0].from.getTime()),
+            BigInt(data.dates[0].to.getTime()),
+          ],
         ],
-      ],
-    });
-    console.log("Event submitted:", data);
-    console.log(eventId);
-  };
-  console.log(control._formValues);
+      });
 
-  client.events.query.all().then(console.log);
+      console.log("Event submitted:", data);
+      console.log(eventId);
+
+      setToast({
+        open: true,
+        message: "Event created successfully",
+        severity: "success",
+      });
+
+      setTimeout(() => {
+        router.push("/");
+      }, 500);
+    } catch (e) {
+      console.error(e);
+      setToast({
+        open: true,
+        message:
+          e instanceof Error
+            ? `Error creating event: ${e.message}`
+            : "Unexpected error creating the event",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleToastClose = (
+    _event?: SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") return;
+    setToast((previous) => ({ ...previous, open: false }));
+  };
 
   return (
     <Box
@@ -172,7 +225,7 @@ export default function EventForm() {
             }`}
             contentEditable={false}
           >
-            Seleccionar fechas del evento
+            Select event dates
           </TextField>
           <DateRangePicker
             open={openPicker}
@@ -265,7 +318,7 @@ export default function EventForm() {
                 })
               }
             >
-              Añadir ticket class
+              Add ticket class
             </Button>
           )}
 
@@ -278,10 +331,32 @@ export default function EventForm() {
 
         <Divider />
 
-        <Button type="submit" variant="contained">
-          Submit Event
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={isSubmitting}
+          startIcon={
+            isSubmitting ? <CircularProgress size={18} color="inherit" /> : null
+          }
+        >
+          {isSubmitting ? "Submitting…" : "Submit Event"}
         </Button>
       </Stack>
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={handleToastClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleToastClose}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

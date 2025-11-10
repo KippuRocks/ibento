@@ -1,35 +1,84 @@
 "use client";
 
+import { Binary, createClient } from "polkadot-api";
+import {
+  KippuConfig,
+  KippuPAPIConsumer,
+  isKreivoTx,
+} from "@kippurocks/libticketto-papi";
 import { useEffect, useState } from "react";
 
 import { TickettoClientBuilder } from "@ticketto/protocol";
-import { TickettoWebStubConsumer } from "@ticketto/web-stub";
-import { type AccountId } from "@ticketto/types";
+import { getWsProvider } from "polkadot-api/ws-provider";
 import { TickettoClientProvider } from "./TickettoClientProvider";
+import { PapiSigner } from "./PapiSigner";
 
 export function TickettoProvider({
-  accountId,
+  account,
   children,
 }: {
-  accountId?: AccountId;
+  account?: PapiSigner;
   children: React.ReactNode;
 }) {
-  const [isClientSide, setIsClientSide] = useState(false);
-  const builder = new TickettoClientBuilder()
-    .withConsumer(TickettoWebStubConsumer)
-    .withConfig({
-      accountProvider: {
-        getAccountId: () => "5DD8bv4RnTDuJt47SAjpWMT78N7gfBQNF2YiZpVUgbXkizMG",
-        sign: (payload: Uint8Array) => Promise.resolve(payload),
-      },
-    });
+  const [builder, setBuilder] = useState<TickettoClientBuilder | undefined>(
+    undefined
+  );
 
   useEffect(() => {
-    setIsClientSide(true);
-  }, [accountId, builder]);
+    const accountProvider = account
+      ? {
+          getAccountId: () => {
+            console.log("address", account.address);
+            return account.address;
+          },
+          async sign<T>(payload: T) {
+            if (!isKreivoTx(payload)) {
+              throw new Error(
+                "This `AccountProvider` is not compatible with the provided payload"
+              );
+            }
+
+            const signature = await payload.sign(account.signer);
+            return Binary.fromHex(signature).asBytes();
+          },
+        }
+      : {
+          getAccountId() {
+            throw new Error("Account not provided");
+          },
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          sign<T>(_: T) {
+            throw new Error("Account not provided");
+          },
+        };
+
+    setBuilder(
+      new TickettoClientBuilder().withConsumer(KippuPAPIConsumer).withConfig({
+        consumerSettings: {
+          api: {
+            endpoint: process.env.NEXT_PUBLIC_KIPPU_API_ENDPOINT,
+            clientId: process.env.NEXT_PUBLIC_KIPPU_API_CLIENT_ID,
+            clientSecret: process.env.NEXT_PUBLIC_KIPPU_API_CLIENT_SECRET,
+          },
+          client: createClient(
+            getWsProvider(
+              process.env.NEXT_PUBLIC_CHAIN_ENDPOINT ??
+                "wss://kreivo.kippu.rocks"
+            )
+          ),
+          eventsContractAddress:
+            process.env.NEXT_PUBLIC_EVENTS_CONTRACT_ADDRESS,
+          ticketsContractAddress:
+            process.env.NEXT_PUBLIC_TICKETS_CONTRACT_ADDRESS,
+          merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID,
+        },
+        accountProvider,
+      } as KippuConfig)
+    );
+  }, [account]);
 
   return (
-    isClientSide && (
+    builder && (
       <TickettoClientProvider builder={builder}>
         {children}
       </TickettoClientProvider>

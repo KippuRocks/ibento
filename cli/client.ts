@@ -7,16 +7,12 @@ import {
 } from "@kippurocks/libticketto-papi";
 
 import { TickettoClientBuilder } from "@ticketto/protocol";
-import { getWsProvider } from "polkadot-api/ws-provider/web";
+import { getWsProvider } from "polkadot-api/ws-provider";
 import { keyring } from "./signer";
 
 // Setup the app authenticator.
 export const papiClient = createClient(
-  getWsProvider(
-    // "wss://testnet.kreivo.kippu.rocks",
-    //"ws://127.0.0.1:21000"
-    "wss://1cdf5e22d352.ngrok-free.app/"
-  )
+  getWsProvider(process.env.NEXT_PUBLIC_CHAIN_ENDPOINT ?? "")
 );
 
 // Initialize the ticketto client.
@@ -40,9 +36,9 @@ export const client = await new TickettoClientBuilder()
     consumerSettings: {
       client: papiClient,
       apiEndpoint: "https://api.kippu.rocks",
-      eventsContractAddress: "EafZgeorhvDpUssErFTPz1Gme3gTdE3Sg3Y9fgNCF4tHmfz",
-      ticketsContractAddress: "GfMJAoBe5TTMQGYpnBj6xtjSyjUCYj99p5gZDev8Tt1wcbp",
+      eventsContractAddress: process.env.NEXT_PUBLIC_EVENTS_CONTRACT_ADDRESS,
+      ticketsContractAddress: process.env.NEXT_PUBLIC_TICKETS_CONTRACT_ADDRESS,
       merchantId: 1,
-    } as KippuConsumerSettings,
+    } as unknown as KippuConsumerSettings,
   })
   .build();
