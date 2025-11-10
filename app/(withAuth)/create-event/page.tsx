@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Input from "@mui/material/Input";
 import { AttendancePolicyType } from "@ticketto/types";
 import {
   Box,
@@ -72,6 +71,8 @@ export default function EventForm() {
       ticketClasses: [],
     },
   });
+
+  const [fileName, setFileName] = useState<string | undefined>();
 
   const provider = useContext(TickettoClientContext);
 
@@ -170,7 +171,16 @@ export default function EventForm() {
     <Box
       component="form"
       onSubmit={handleSubmit(onSubmit)}
-      sx={{ p: 4, maxWidth: 600, mx: "auto" }}
+      sx={{
+        p: 4,
+        maxWidth: 600,
+        mx: "auto",
+        margin: "auto",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        justifyContent: "center",
+      }}
     >
       <Typography variant="h5" gutterBottom>
         Create Event
@@ -195,7 +205,21 @@ export default function EventForm() {
 
         <Box>
           <InputLabel>Banner</InputLabel>
-          <Input type="file" {...register("banner")} />
+          <Button variant="outlined" component="label">
+            Upload File
+            <input
+              type="file"
+              hidden
+              {...register("banner")}
+              onChange={(e) => {
+                register("banner").onChange(e);
+                setFileName(e.target.value.split("\\").pop());
+              }}
+            />
+          </Button>
+          <Typography color="textPrimary" variant="body2">
+            {fileName}
+          </Typography>
           {errors.banner && (
             <Typography color="error" variant="body2">
               {errors.banner.message as string}
