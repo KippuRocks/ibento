@@ -39,3 +39,37 @@ export async function query<T>(page: Page, path: string, input?: unknown): Promi
     { path, input },
   ) as Promise<T>;
 }
+
+/** Calls a Kippu API mutation from the page, with the console's session. */
+export async function mutate<T>(page: Page, path: string, input: unknown): Promise<T> {
+  return page.evaluate(
+    async ({ path, input }) => {
+      const stored = JSON.parse(sessionStorage.getItem("ibento.session") ?? "null");
+      const response = await fetch(`/v0/trpc/${path}`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${stored.token}`, "content-type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        throw new Error(`${path} failed: ${JSON.stringify(body)}`);
+      }
+      return body.result.data;
+    },
+    { path, input },
+  ) as Promise<T>;
+}
+
+/** Creates an event with one unseated zone through the wizard, and answers its id. */
+export async function createEvent(page: Page, name: string): Promise<string> {
+  await page.getByRole("link", { name: "New event" }).click();
+  await page.getByLabel("Event name").fill(name);
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Add a zone" }).click();
+  await page.getByLabel("Zone 1 name").fill("Standing");
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Create event" }).click();
+  await expect(page.getByTestId("event-status")).toHaveText("Active");
+  return new URL(page.url()).hash.replace("#/events/", "");
+}

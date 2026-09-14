@@ -14,6 +14,13 @@ export interface SessionDraft {
   readonly endsAt: string;
 }
 
+/** An image of the event, uploaded to the metadata origin (`T-026-06`). */
+export interface ImageDraft {
+  readonly url: string;
+  readonly alt: string;
+  readonly mediaType: string | null;
+}
+
 /** What the organiser writes about an event, as the form holds it. Nothing here is a ledger fact. */
 export interface EventDetailsDraft {
   readonly name: string;
@@ -27,6 +34,8 @@ export interface EventDetailsDraft {
   readonly country: string;
   readonly timeZone: string;
   readonly sessions: readonly SessionDraft[];
+  /** In the order a client should prefer them. */
+  readonly imagery: readonly ImageDraft[];
 }
 
 export interface ZoneName {
@@ -47,6 +56,7 @@ export function emptyDetails(): EventDetailsDraft {
     country: "",
     timeZone: "",
     sessions: [],
+    imagery: [],
   };
 }
 
@@ -92,17 +102,50 @@ function text<K extends string>(key: K, value: string): { [P in K]?: string } {
   return (trimmed === "" ? {} : { [key]: trimmed }) as { [P in K]?: string };
 }
 
+type Json = EventDocument[string];
+type JsonObject = { readonly [field: string]: Json };
+
+function objectAt(value: Json | undefined): JsonObject | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as JsonObject)
+    : null;
+}
+
+function textAt(value: Json | undefined): string {
+  return typeof value === "string" ? value : "";
+}
+
+/** The fields of the event schema the details form writes; every other field is kept as it was. */
+const MANAGED_FIELDS = [
+  "$schema",
+  "eventId",
+  "name",
+  "description",
+  "organiser",
+  "venue",
+  "schedule",
+  "imagery",
+] as const;
+
 /**
  * The event document the details describe, declaring the event schema, with
- * `eventId` the event's. Empty fields are left out. Zones without a name are
- * left out of `zones`: a zone's identity and kind are ledger facts, its name is
- * not.
+ * `eventId` the event's. Empty fields are left out.
+ *
+ * Given the document the event already has, fields the form does not edit —
+ * seat map references, zone descriptions — are kept. A zone's name is set for
+ * each zone named, and removed when left empty: a zone's identity and kind are
+ * ledger facts, its name is not.
  */
 export function eventDocument(
   eventId: string,
   details: EventDetailsDraft,
   zones: readonly ZoneName[],
+  base: EventDocument | null = null,
 ): EventDocument {
+  const kept: Record<string, Json> = { ...base };
+  for (const field of MANAGED_FIELDS) {
+    delete kept[field];
+  }
   const address = {
     ...text("streetAddress", details.streetAddress),
     ...text("locality", details.locality),
@@ -110,15 +153,25 @@ export function eventDocument(
     ...text("postalCode", details.postalCode),
     ...text("country", details.country),
   };
-  const namedZones = Object.fromEntries(
-    zones
-      .filter((zone) => zone.name.trim() !== "")
-      .map((zone) => [zone.id, { name: zone.name.trim() }]),
-  );
+  const zoneEntries: Record<string, Json> = { ...objectAt(base?.zones) };
+  for (const zone of zones) {
+    const name = zone.name.trim();
+    if (name === "") {
+      delete zoneEntries[zone.id];
+    } else {
+      zoneEntries[zone.id] = { ...objectAt(zoneEntries[zone.id]), name };
+    }
+  }
+  delete kept.zones;
   const sessions = details.sessions.map((session) => ({
     ...text("name", session.name),
     startsAt: rfc3339(session.startsAt) ?? "",
     ...(rfc3339(session.endsAt) === null ? {} : { endsAt: rfc3339(session.endsAt) ?? "" }),
+  }));
+  const imagery = details.imagery.map((image) => ({
+    url: image.url,
+    ...text("alt", image.alt),
+    ...(image.mediaType === null ? {} : { mediaType: image.mediaType }),
   }));
   return {
     $schema: EVENT_SCHEMA_ID,
@@ -139,6 +192,66 @@ export function eventDocument(
     ...(sessions.length === 0
       ? {}
       : { schedule: { ...text("timeZone", details.timeZone), sessions } }),
-    ...(Object.keys(namedZones).length === 0 ? {} : { zones: namedZones }),
+    ...(imagery.length === 0 ? {} : { imagery }),
+    ...kept,
+    ...(Object.keys(zoneEntries).length === 0 ? {} : { zones: zoneEntries }),
   };
+}
+
+/** A time as a `datetime-local` input holds it, in this browser's time zone. */
+export function localDateTime(iso: string): string {
+  const time = new Date(iso);
+  if (Number.isNaN(time.getTime())) {
+    return "";
+  }
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${time.getFullYear()}-${pad(time.getMonth() + 1)}-${pad(time.getDate())}T${pad(
+    time.getHours(),
+  )}:${pad(time.getMinutes())}`;
+}
+
+/** The details form's fields, filled from the document an event has; empty when it has none. */
+export function detailsOf(document: EventDocument | null): EventDetailsDraft {
+  if (document === null) {
+    return emptyDetails();
+  }
+  const venue = objectAt(document.venue);
+  const address = objectAt(venue?.address);
+  const schedule = objectAt(document.schedule);
+  const sessions = Array.isArray(schedule?.sessions) ? schedule.sessions : [];
+  const imagery = Array.isArray(document.imagery) ? document.imagery : [];
+  return {
+    name: textAt(document.name),
+    description: textAt(document.description),
+    tradingName: textAt(objectAt(document.organiser)?.tradingName),
+    venueName: textAt(venue?.name),
+    streetAddress: textAt(address?.streetAddress),
+    locality: textAt(address?.locality),
+    region: textAt(address?.region),
+    postalCode: textAt(address?.postalCode),
+    country: textAt(address?.country),
+    timeZone: textAt(schedule?.timeZone),
+    sessions: sessions.map((entry) => {
+      const session = objectAt(entry);
+      return {
+        name: textAt(session?.name),
+        startsAt: localDateTime(textAt(session?.startsAt)),
+        endsAt: localDateTime(textAt(session?.endsAt)),
+      };
+    }),
+    imagery: imagery.flatMap((entry) => {
+      const image = objectAt(entry);
+      const url = textAt(image?.url);
+      if (url === "") {
+        return [];
+      }
+      const mediaType = textAt(image?.mediaType);
+      return [{ url, alt: textAt(image?.alt), mediaType: mediaType === "" ? null : mediaType }];
+    }),
+  };
+}
+
+/** The name the document gives a zone; empty when it gives none. */
+export function zoneNameOf(document: EventDocument | null, zone: string): string {
+  return textAt(objectAt(objectAt(document?.zones)?.[zone])?.name);
 }

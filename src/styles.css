@@ -140,3 +140,8 @@ td {
   padding: 0.25rem 0.5rem;
   border-bottom: 1px solid #8884;
 }
+
+code.url {
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}

@@ -4,18 +4,20 @@ import { useMemo, useSyncExternalStore } from "react";
 export type Route =
   | { readonly name: "events" }
   | { readonly name: "new-event" }
-  | { readonly name: "event"; readonly event: string };
+  | { readonly name: "event"; readonly event: string }
+  | { readonly name: "edit-event"; readonly event: string };
 
-const EVENT_PATH = /^\/events\/([0-9a-f]{64})$/;
+const EVENT_PATH = /^\/events\/([0-9a-f]{64})(\/edit)?$/;
 
 export function parseRoute(hash: string): Route {
   const path = hash.replace(/^#/, "");
   if (path === "/events/new") {
     return { name: "new-event" };
   }
-  const event = EVENT_PATH.exec(path)?.[1];
+  const match = EVENT_PATH.exec(path);
+  const event = match?.[1];
   if (event !== undefined) {
-    return { name: "event", event };
+    return match?.[2] === undefined ? { name: "event", event } : { name: "edit-event", event };
   }
   return { name: "events" };
 }
@@ -28,6 +30,8 @@ export function hrefOf(route: Route): string {
       return "#/events/new";
     case "event":
       return `#/events/${route.event}`;
+    case "edit-event":
+      return `#/events/${route.event}/edit`;
   }
 }
 

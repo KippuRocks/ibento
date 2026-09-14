@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "../api/client";
 import { describeFailure } from "../api/errors";
 import { ClassesSection } from "../classes/ClassesSection";
+import { hrefOf } from "../routing";
 import { documentText, type EventView, eventName } from "./view";
 
 function SeatPositionCount({ event, zone }: { event: string; zone: string }) {
@@ -97,7 +98,12 @@ export function EventPage({ event: id }: { event: string }) {
   const description = documentText(event.metadata, "description");
   return (
     <section>
-      <h1>{eventName(event)}</h1>
+      <div className="heading-row">
+        <h1>{eventName(event)}</h1>
+        <a className="button" href={hrefOf({ name: "edit-event", event: event.id })}>
+          Edit details
+        </a>
+      </div>
       {description === null ? null : <p>{description}</p>}
       <Facts event={event} />
       <ClassesSection event={event.id} />
