@@ -36,6 +36,12 @@ holds a key.
     and spaces count, so `C-14`, `c14` and `C-14 ` are three seats.
   - Creation is a ledger write, then a document write and seat-position uploads,
     which are not. If a later step fails, retrying repeats only the later steps.
+- **Editing** — `#/events/<id>/edit` edits the event's public document
+  (`US-A3`) through `metadata.events.put`: details, zone names and images. It
+  starts from the document the event has, and keeps the fields it does not
+  edit, such as seat map references. Images are JPEG, PNG or WebP of at most
+  2 MiB, uploaded through `metadata.images.upload` to the metadata origin; SVG
+  is refused. Editing writes nothing to the ledger (`AC-A3.1`).
 - **Ticket classes** — on the event page (`US-B2`): several classes per event
   (`REQ-TC-1`), each with a name, description, provenance, attendance policy,
   restrictions and an optional quota, defined through `events.classes.define`.
@@ -96,6 +102,9 @@ types Ibento compiles against.
   `KIPPU_LOGIN_ORIGINS` to Ibento's local origins, `http://localhost:5173` and
   `http://localhost:4173`. `KIPPU_HOLDER_RP_ID` is a placeholder kippu-api
   requires; Ibento never uses it. The real hostnames are not chosen yet.
+
+The end-to-end tests run on one worker: `AC-A3.1` counts the ledger records
+written while an edit runs, which concurrent tests would disturb.
 
 Playwright starts the test API and the preview server itself, and gives
 Chromium a virtual WebAuthn authenticator, so no person or device answers the

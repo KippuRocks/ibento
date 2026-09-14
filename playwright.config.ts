@@ -13,7 +13,9 @@ const CI = process.env.CI !== undefined;
  */
 export default defineConfig({
   testDir: "e2e",
-  fullyParallel: true,
+  // One worker: AC-A3.1 counts the ledger records written while an edit runs, which any
+  // concurrent test's writes to the shared test API would disturb.
+  workers: 1,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
   reporter: CI ? [["list"], ["html", { open: "never" }]] : "list",

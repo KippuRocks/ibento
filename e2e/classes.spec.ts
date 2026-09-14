@@ -1,6 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { addVirtualAuthenticator } from "./support/authenticator";
-import { query, signUpOrganiser } from "./support/organiser";
+import { createEvent, query, signUpOrganiser } from "./support/organiser";
 
 interface TicketClass {
   readonly name: string;
@@ -8,19 +8,6 @@ interface TicketClass {
   readonly policy: unknown;
   readonly restrictions: { readonly cannotResale: boolean; readonly cannotTransfer: boolean };
   readonly quota: number | null;
-}
-
-async function createEvent(page: Page, name: string): Promise<string> {
-  await page.getByRole("link", { name: "New event" }).click();
-  await page.getByLabel("Event name").fill(name);
-  await page.getByRole("button", { name: "Next" }).click();
-  await page.getByRole("button", { name: "Add a zone" }).click();
-  await page.getByLabel("Zone 1 name").fill("Standing");
-  await page.getByRole("button", { name: "Next" }).click();
-  await page.getByRole("button", { name: "Next" }).click();
-  await page.getByRole("button", { name: "Create event" }).click();
-  await expect(page.getByTestId("event-status")).toHaveText("Active");
-  return new URL(page.url()).hash.replace("#/events/", "");
 }
 
 test.beforeEach(async ({ page }) => {

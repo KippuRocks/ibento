@@ -4,6 +4,7 @@ import { useTRPC } from "./api/client";
 import { failureOf } from "./api/errors";
 import { useSession } from "./auth/SessionProvider";
 import type { StoredSession } from "./auth/session";
+import { EditEventPage } from "./events/EditEventPage";
 import { EventPage } from "./events/EventPage";
 import { EventsPage } from "./events/EventsPage";
 import { NewEventWizard } from "./events/NewEventWizard";
@@ -17,6 +18,8 @@ function Page({ route }: { route: Route }) {
       return <NewEventWizard />;
     case "event":
       return <EventPage key={route.event} event={route.event} />;
+    case "edit-event":
+      return <EditEventPage key={route.event} event={route.event} />;
   }
 }
 

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { detailsProblems, EVENT_SCHEMA_ID, emptyDetails, eventDocument } from "./document";
+import {
+  detailsOf,
+  detailsProblems,
+  EVENT_SCHEMA_ID,
+  emptyDetails,
+  eventDocument,
+  zoneNameOf,
+} from "./document";
 
 const EVENT = "a".repeat(64);
 const STALLS = "b".repeat(64);
@@ -59,5 +66,53 @@ describe("the event document", () => {
         sessions: [{ name: "", startsAt: "", endsAt: "" }],
       }),
     ).toHaveLength(3);
+  });
+});
+
+describe("editing an event document", () => {
+  const base = {
+    $schema: EVENT_SCHEMA_ID,
+    eventId: EVENT,
+    name: "Gala",
+    description: "Old copy.",
+    venue: { name: "Teatro Real", address: { country: "ES" } },
+    schedule: { sessions: [{ startsAt: "2026-10-01T18:00:00.000Z" }] },
+    imagery: [{ url: "https://meta.kippu.rocks/v0/images/a/1.png", mediaType: "image/png" }],
+    zones: { [STALLS]: { name: "Stalls", description: "Rows A to F" } },
+    seatMaps: [{ url: "https://meta.kippu.rocks/v0/images/a/map.png" }],
+  };
+
+  it("fills the form from the document, and writes the same document back unchanged", () => {
+    const details = detailsOf(base);
+    expect(details).toMatchObject({
+      name: "Gala",
+      description: "Old copy.",
+      venueName: "Teatro Real",
+      country: "ES",
+      imagery: [{ url: base.imagery[0]?.url, alt: "", mediaType: "image/png" }],
+    });
+    expect(
+      eventDocument(EVENT, details, [{ id: STALLS, name: zoneNameOf(base, STALLS) }], base),
+    ).toEqual(base);
+  });
+
+  it("changes what the form edits and keeps what it does not", () => {
+    const details = { ...detailsOf(base), description: "New copy.", imagery: [] };
+    const document = eventDocument(EVENT, details, [{ id: STALLS, name: "Front stalls" }], base);
+    expect(document.description).toBe("New copy.");
+    expect(document.imagery).toBeUndefined();
+    expect(document.seatMaps).toEqual(base.seatMaps);
+    expect(document.zones).toEqual({
+      [STALLS]: { name: "Front stalls", description: "Rows A to F" },
+    });
+  });
+
+  it("removes a zone's name when it is left empty", () => {
+    const document = eventDocument(EVENT, detailsOf(base), [{ id: STALLS, name: "" }], base);
+    expect(document.zones).toBeUndefined();
+  });
+
+  it("starts from an empty form for an event with no document", () => {
+    expect(detailsOf(null)).toEqual(emptyDetails());
   });
 });
