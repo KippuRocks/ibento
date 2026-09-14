@@ -37,3 +37,106 @@ button.link {
 .error {
   color: #b3261e;
 }
+
+.console-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  max-width: 48rem;
+  margin: 0 auto 1.5rem;
+}
+
+.console-header .brand {
+  font-weight: 700;
+}
+
+.console-header .account {
+  margin-left: auto;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.console-body {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.heading-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+a.button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid currentColor;
+  text-decoration: none;
+}
+
+fieldset {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid #8884;
+  padding: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.group {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-left: 3px solid #8886;
+}
+
+.hint,
+.note {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.steps {
+  display: flex;
+  gap: 1.5rem;
+  padding-left: 1.25rem;
+}
+
+.steps [aria-current="step"] {
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid #8884;
+}

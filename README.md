@@ -26,11 +26,21 @@ holds a key.
   relying party, never a ledger credential. The session is an opaque bearer
   token, kept in the tab's `sessionStorage` and sent as
   `Authorization: Bearer <token>`.
+- **Events** — `#/events` lists the events the organiser's ledger account owns,
+  read from Kippu's derived copy of the ledger (`derived.events.mine`).
+  `#/events/new` is the creation wizard (`US-A1`): details for the event's public
+  metadata document, zones with their kinds (`REQ-ID-7`), canonical seat
+  positions for seated zones, and an optional capacity. `#/events/<id>` shows the
+  event's ledger facts and document as the derived copy holds them.
+  - Seat positions are one designation per line, taken exactly as written: case
+    and spaces count, so `C-14`, `c14` and `C-14 ` are three seats.
+  - Creation is a ledger write, then a document write and seat-position uploads,
+    which are not. If a later step fails, retrying repeats only the later steps.
 
 ## Development
 
 Requires Node 24 or later, pnpm (the version is pinned in `package.json`), and
-Docker for the local test API's store.
+Docker for the local test API's store and metadata storage.
 
 ```sh
 pnpm install
@@ -61,9 +71,20 @@ rebuilds it at the recorded commit and fails if it differs.
 built once into `.test-api/`, so the end-to-end tests exercise the server whose
 types Ibento compiles against.
 
+- **Ledger** — kippu-api's development wiring
+  (`KIPPU_LEDGER_ENVIRONMENT=development`): `backend-memory`, a software KMS for
+  organiser keys and a development sponsor, all in the server's memory and lost
+  when it exits.
 - **Store** — PostgreSQL. CI passes `KIPPU_DATABASE_URL` for a service
   container. Locally, without it, the script starts kippu-api's own compose
-  store and uses an `ibento_e2e` database there.
+  store and recreates an `ibento_e2e` database there on every start, since the
+  in-memory ledger starts empty too.
+- **Metadata storage** — MinIO, an S3-compatible stand-in: CI runs the image
+  kippu-api's CI pins by digest and passes the `KIPPU_METADATA_S3_*` keys.
+  Locally, without them, kippu-api's compose file runs MinIO with the
+  `kippu-metadata` bucket. `KIPPU_METADATA_PUBLIC_URL` defaults to
+  `https://meta.kippu.rocks`, the origin locators name (`AD-22`); no object
+  store, CDN or DNS record exists for it yet.
 - **Login relying party** — `KIPPU_LOGIN_RP_ID` defaults to `localhost`, and
   `KIPPU_LOGIN_ORIGINS` to Ibento's local origins, `http://localhost:5173` and
   `http://localhost:4173`. `KIPPU_HOLDER_RP_ID` is a placeholder kippu-api

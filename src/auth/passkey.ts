@@ -3,14 +3,6 @@ import { startAuthentication, startRegistration } from "@simplewebauthn/browser"
 import type { inferRouterOutputs } from "@trpc/server";
 import type { KippuClient } from "../api/client";
 
-/**
- * The browser's extension outputs are a DOM interface; the `C5` input names
- * them as a plain record. Copying them gives the same value that type.
- */
-function extensionResults(outputs: object): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(outputs));
-}
-
 export type OrganiserSession = inferRouterOutputs<AppRouter>["auth"]["organiser"]["completeSignIn"];
 
 /**
@@ -23,10 +15,7 @@ export async function signUp(client: KippuClient, email: string): Promise<Organi
   const credential = await startRegistration({ optionsJSON: challenge.options });
   return client.auth.organiser.completeSignUp.mutate({
     ceremonyId: challenge.ceremonyId,
-    credential: {
-      ...credential,
-      clientExtensionResults: extensionResults(credential.clientExtensionResults),
-    },
+    credential,
   });
 }
 
@@ -36,9 +25,6 @@ export async function signIn(client: KippuClient, email: string): Promise<Organi
   const credential = await startAuthentication({ optionsJSON: challenge.options });
   return client.auth.organiser.completeSignIn.mutate({
     ceremonyId: challenge.ceremonyId,
-    credential: {
-      ...credential,
-      clientExtensionResults: extensionResults(credential.clientExtensionResults),
-    },
+    credential,
   });
 }

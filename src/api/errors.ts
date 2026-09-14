@@ -16,3 +16,24 @@ export function failureOf(error: unknown): Failure {
   }
   return { errorCode: null, transport: null };
 }
+
+/**
+ * What a failed call tells the organiser: the §10 code verbatim when the error
+ * carries one (`REQ-Q-3`); the API's own refusal when it names no code, such as
+ * a document that does not conform to its schema; otherwise that Kippu could
+ * not be reached.
+ */
+export function describeFailure(error: unknown): string {
+  const { errorCode, transport } = failureOf(error);
+  if (errorCode !== null) {
+    return errorCode;
+  }
+  if (
+    error instanceof TRPCClientError &&
+    transport !== null &&
+    transport !== "INTERNAL_SERVER_ERROR"
+  ) {
+    return error.message;
+  }
+  return "Kippu could not be reached. Try again.";
+}
