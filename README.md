@@ -36,6 +36,13 @@ holds a key.
     and spaces count, so `C-14`, `c14` and `C-14 ` are three seats.
   - Creation is a ledger write, then a document write and seat-position uploads,
     which are not. If a later step fails, retrying repeats only the later steps.
+- **Ticket classes** — on the event page (`US-B2`): several classes per event
+  (`REQ-TC-1`), each with a name, description, provenance, attendance policy,
+  restrictions and an optional quota, defined through `events.classes.define`.
+  A `Purchased` class with a restriction is refused by the form before anything
+  is sent, and the form says why (`REQ-TC-3`); kippu-api refuses it too, with
+  `ERR-RestrictionNotPermitted`. `Cannot be transferred` carries
+  `Cannot be resold` with it (`REQ-TK-2`).
 
 ## Development
 
