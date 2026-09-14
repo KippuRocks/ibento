@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "../api/client";
 import { describeFailure } from "../api/errors";
+import { ClassesSection } from "../classes/ClassesSection";
 import { documentText, type EventView, eventName } from "./view";
 
 function SeatPositionCount({ event, zone }: { event: string; zone: string }) {
@@ -99,6 +100,7 @@ export function EventPage({ event: id }: { event: string }) {
       <h1>{eventName(event)}</h1>
       {description === null ? null : <p>{description}</p>}
       <Facts event={event} />
+      <ClassesSection event={event.id} />
       <p className="note">
         Read from Kippu's copy of the ledger. Where the copy and the ledger disagree, the ledger is
         right.
