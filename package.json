@@ -1,0 +1,46 @@
+{
+  "name": "ibento",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Ibento — the organiser console",
+  "license": "UNLICENSED",
+  "type": "module",
+  "packageManager": "pnpm@10.17.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome ci .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "test-api": "tools/test-api.sh",
+    "vendor:kippu-api": "tools/vendor-kippu-api.sh",
+    "vendor:check": "tools/vendor-kippu-api.sh --check"
+  },
+  "dependencies": {
+    "@simplewebauthn/browser": "14.0.0",
+    "@tanstack/react-query": "5.102.8",
+    "@trpc/client": "11.18.0",
+    "@trpc/server": "11.18.0",
+    "@trpc/tanstack-react-query": "11.18.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.13",
+    "@kippu/api": "file:vendor/kippu-api/kippu-api-0.0.0.tgz",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.13.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.0",
+    "vitest": "5.0.0"
+  }
+}

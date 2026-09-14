@@ -1,0 +1,39 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+}
+
+.panel {
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+input,
+button {
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+}
+
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: LinkText;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.error {
+  color: #b3261e;
+}

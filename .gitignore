@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+# The kippu-api checkout tools/test-api.sh builds and runs for the end-to-end tests.
+.test-api/
+# Playwright's output.
+playwright-report/
+test-results/
