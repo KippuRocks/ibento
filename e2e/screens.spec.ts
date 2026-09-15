@@ -70,6 +70,8 @@ test("every screen in screens.json renders its data-screen id, reached along dec
   await walk.on("event.create.details");
   await page.getByRole("button", { name: "Next" }).click();
   await walk.on("event.create.zones");
+  await page.getByRole("button", { name: "Add a zone" }).click();
+  await page.getByLabel("Zone 1 name").fill("Standing");
   await page.getByRole("button", { name: "Next" }).click();
   await walk.on("event.create.capacity");
   await page.getByRole("button", { name: "Back" }).click();
@@ -92,6 +94,19 @@ test("every screen in screens.json renders its data-screen id, reached along dec
   await page.getByRole("link", { name: "Edit details" }).click();
   await walk.on("event.edit");
   await page.getByRole("button", { name: "Save changes" }).click();
+  await walk.on("event.detail");
+
+  const classForm = page.getByRole("form", { name: "Define a class" });
+  await classForm.getByLabel("Class name").fill("Guests");
+  await classForm.getByRole("button", { name: "Define class" }).click();
+  await expect(page.getByRole("status")).toHaveText("Defined the class Guests.");
+  await page.getByRole("link", { name: "Guest list" }).click();
+  await walk.on("event.guests");
+  await page.getByRole("button", { name: "Create invitation" }).click();
+  await walk.on("event.guests.link");
+  await page.getByRole("button", { name: "Done" }).click();
+  await walk.on("event.guests");
+  await page.getByRole("link", { name: "Back to the event" }).click();
   await walk.on("event.detail");
 
   await page.getByRole("link", { name: "Your events" }).click();

@@ -87,6 +87,7 @@
       "navigatesTo": [
         "auth.sign-in",
         "event.edit",
+        "event.guests",
         "events.list"
       ]
     },
@@ -97,6 +98,27 @@
       "navigatesTo": [
         "auth.sign-in",
         "event.detail",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "event.guests",
+      "route": "#/events/:event/guests",
+      "title": "Guest list",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.detail",
+        "event.guests.link",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "event.guests.link",
+      "route": "#/events/:event/guests",
+      "title": "Invitation link",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.guests",
         "events.list"
       ]
     }

@@ -117,6 +117,14 @@ function EventDetail({ event: id }: { event: string }) {
         >
           Edit details
         </ScreenLink>
+        <ScreenLink
+          from="event.detail"
+          to="event.guests"
+          params={{ event: event.id }}
+          className="button"
+        >
+          Guest list
+        </ScreenLink>
       </div>
       {description === null ? null : <p>{description}</p>}
       <Facts event={event} />

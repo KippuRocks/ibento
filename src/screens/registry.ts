@@ -47,6 +47,12 @@ export const SCREENS = {
   "event.create.review": { title: "New event: review", route: "#/events/new", chrome: "console" },
   "event.detail": { title: "Event", route: "#/events/:event", chrome: "console" },
   "event.edit": { title: "Edit event", route: "#/events/:event/edit", chrome: "console" },
+  "event.guests": { title: "Guest list", route: "#/events/:event/guests", chrome: "console" },
+  "event.guests.link": {
+    title: "Invitation link",
+    route: "#/events/:event/guests",
+    chrome: "console",
+  },
 } as const satisfies Readonly<Record<string, ScreenDefinition>>;
 
 export type ScreenId = keyof typeof SCREENS;

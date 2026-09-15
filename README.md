@@ -32,8 +32,10 @@ holds a key.
   metadata document, zones with their kinds (`REQ-ID-7`), canonical seat
   positions for seated zones, and an optional capacity. `#/events/<id>` shows the
   event's ledger facts and document as the derived copy holds them.
-  - Seat positions are one designation per line, taken exactly as written: case
-    and spaces count, so `C-14`, `c14` and `C-14 ` are three seats.
+  - Seat positions are one designation per line, taken as written: case and
+    spaces count, so `C-14`, `c14` and `C-14 ` are three seats. kippu-api
+    normalises designations to Unicode NFC, so visually identical spellings are
+    one seat.
   - Creation is a ledger write, then a document write and seat-position uploads,
     which are not. If a later step fails, retrying repeats only the later steps.
 - **Editing** — `#/events/<id>/edit` edits the event's public document
@@ -42,6 +44,20 @@ holds a key.
   edit, such as seat map references. Images are JPEG, PNG or WebP of at most
   2 MiB, uploaded through `metadata.images.upload` to the metadata origin; SVG
   is refused. Editing writes nothing to the ledger (`AC-A3.1`).
+- **Guest lists** — `#/events/<id>/guests` (`US-B2`, `REQ-TC-4`): invitations
+  to the event's granted classes, each at a zone and, in a seated zone, a seat,
+  with an optional note of who it is for (kept by Kippu, never on the ledger).
+  - `events.invitations.create` returns the invitation's token once. The link is
+    shown right after creation, with a copy button, and never again: a lost link
+    means a new invitation, and the page says so.
+  - The link is `SAIFU_LINK_BASE` followed by the token. Its format and host
+    belong to Saifu's handoff (`T-030-10`), which is not built; until then
+    `SAIFU_LINK_BASE`, read when the console is built, defaults to the placeholder
+    `https://saifu.kippu.example/invitations/`.
+  - The list (`events.invitations.list`) shows each invitation's status, the
+    holder account that redeemed it and the ticket issued, refreshing while any
+    is waiting. Creating an invitation for a seat that already has an open or
+    redeemed one warns that only one ticket can exist for the seat.
 - **Ticket classes** — on the event page (`US-B2`): several classes per event
   (`REQ-TC-1`), each with a name, description, provenance, attendance policy,
   restrictions and an optional quota, defined through `events.classes.define`.
@@ -132,6 +148,16 @@ types Ibento compiles against.
   `KIPPU_LOGIN_ORIGINS` to Ibento's local origins, `http://localhost:5173` and
   `http://localhost:4173`. `KIPPU_HOLDER_RP_ID` is a placeholder kippu-api
   requires; Ibento never uses it. The real hostnames are not chosen yet.
+
+**Saifu stand-in.** A guest redeems an invitation in Saifu, in a holder session.
+Saifu's handoff is not built, and in development the ledger lives inside the
+server's process, where no other process can register a holder credential. So the
+test API runs kippu-api's server through `tools/test-api/harness.mjs`, which
+composes it as kippu-api's `src/server.ts` does and adds, on `127.0.0.1:8089`, a
+stand-in for Saifu's side of linking: `POST /holders` registers a simulated
+passkey credential on the server's ledger, links it through `auth.holder.*`, and
+answers the holder account and session token. The tests then redeem through
+kippu-api's real `events.invitations.redeem`.
 
 The end-to-end tests run on one worker: `AC-A3.1` counts the ledger records
 written while an edit runs, which concurrent tests would disturb.

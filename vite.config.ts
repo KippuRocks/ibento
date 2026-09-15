@@ -14,6 +14,8 @@ const proxy = { "/v0/trpc": { target: apiTarget, changeOrigin: false } };
 
 export default defineConfig({
   plugins: [react()],
+  // SAIFU_LINK_BASE: where invitation links point, until Saifu's handoff defines them.
+  envPrefix: ["VITE_", "SAIFU_"],
   server: { host: "localhost", port: 5173, strictPort: true, proxy },
   preview: { host: "localhost", port: 4173, strictPort: true, proxy },
 });
