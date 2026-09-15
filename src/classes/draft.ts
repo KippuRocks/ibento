@@ -1,5 +1,6 @@
 import type { AppRouter } from "@kippu/api";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
+import { parsePrice, type SaleAsset } from "../sales/money";
 
 export type DefineClassInput = inferRouterInputs<AppRouter>["events"]["classes"]["define"];
 export type TicketClass = inferRouterOutputs<AppRouter>["events"]["classes"]["list"][number];
@@ -20,6 +21,8 @@ export interface ClassDraft {
   readonly cannotTransfer: boolean;
   /** Empty for no class quota. */
   readonly quota: string;
+  /** `Purchased` only: in major units of the event's sale asset, as written. */
+  readonly price: string;
 }
 
 export function emptyClass(): ClassDraft {
@@ -33,6 +36,7 @@ export function emptyClass(): ClassDraft {
     cannotResale: false,
     cannotTransfer: false,
     quota: "",
+    price: "",
   };
 }
 
@@ -57,7 +61,7 @@ export type ClassCheck =
  * anything is sent (`REQ-TC-3`). `cannotTransfer` carries `cannotResale` with it
  * (`REQ-TK-2`), as the class's tickets will.
  */
-export function checkClass(event: string, draft: ClassDraft): ClassCheck {
+export function checkClass(event: string, draft: ClassDraft, asset: SaleAsset | null): ClassCheck {
   const problems: string[] = [];
   const name = draft.name.trim();
   if (name === "") {
@@ -84,6 +88,21 @@ export function checkClass(event: string, draft: ClassDraft): ClassCheck {
   if (draft.quota.trim() !== "" && quota === null) {
     problems.push("Write the quota as a whole number, or leave it empty for no class quota.");
   }
+  let price: number | null = null;
+  if (draft.provenance === "Purchased") {
+    if (asset === null) {
+      problems.push(
+        "Choose the event's sale asset before defining a Purchased class: its price is in that asset.",
+      );
+    } else {
+      const parsed = parsePrice(draft.price, asset);
+      if (parsed.ok) {
+        price = parsed.minor;
+      } else {
+        problems.push(parsed.problem);
+      }
+    }
+  }
   if (problems.length > 0) {
     return { ok: false, problems };
   }
@@ -107,6 +126,7 @@ export function checkClass(event: string, draft: ClassDraft): ClassCheck {
         cannotTransfer: draft.cannotTransfer,
       },
       quota,
+      price,
     },
   };
 }

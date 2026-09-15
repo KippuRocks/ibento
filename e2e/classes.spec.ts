@@ -40,11 +40,11 @@ test("AC-B2.1 an organiser defines classes, setting name, quota, policy and, for
 
   await expect(
     page.getByRole("row", {
-      name: "Press Granted Admits up to 2 times Cannot be transferred or resold 20",
+      name: "Press Granted Admits up to 2 times Cannot be transferred or resold 20 Free",
     }),
   ).toBeVisible();
   await expect(
-    page.getByRole("row", { name: "Artist guests Granted Admits once Cannot be resold None" }),
+    page.getByRole("row", { name: "Artist guests Granted Admits once Cannot be resold None Free" }),
   ).toBeVisible();
 
   const classes = await query<readonly TicketClass[]>(page, "events.classes.list", { event });
@@ -98,12 +98,16 @@ test("REQ-TC-3 a Purchased class with a restriction cannot be submitted, and the
   expect(defines).toEqual([]);
   expect(await query<readonly TicketClass[]>(page, "events.classes.list", { event })).toEqual([]);
 
-  // Without the restriction, the same class is defined.
+  // Without the restriction, and priced in the event's sale asset, the same class is defined.
   await form.getByLabel("Cannot be resold").uncheck();
+  const sale = page.getByRole("form", { name: "Sale asset" });
+  await sale.getByLabel("Sale asset").selectOption("COPM/2");
+  await sale.getByRole("button", { name: "Set sale asset" }).click();
+  await form.getByLabel("Price (COPM)").fill("25");
   await form.getByRole("button", { name: "Define class" }).click();
   await expect(
     page.getByRole("row", {
-      name: "General admission Purchased Admits once Transferable and resellable None",
+      name: "General admission Purchased Admits once Transferable and resellable None 25.00 COPM",
     }),
   ).toBeVisible();
 });

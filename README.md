@@ -58,7 +58,21 @@ holds a key.
     holder account that redeemed it and the ticket issued, refreshing while any
     is waiting. Creating an invitation for a seat that already has an open or
     redeemed one warns that only one ticket can exist for the seat.
-- **Ticket classes** — on the event page (`US-B2`): several classes per event
+- **Sale asset and prices** (`US-B4`; `F-021` plan, "Prices"). Each event's
+  primary sales are priced in one asset, `COPM/2` or `DUSD/6`, chosen in the
+  wizard or later on the event page (`events.create`'s `saleAsset`,
+  `events.setSaleAsset`). An event without one is not on sale, and the page
+  says so. The asset is fixed after the event's first hold (`events.saleAsset`
+  reports `fixed`). Every `Purchased` class has a price; a `Granted` class has
+  none.
+  - Prices are entered and shown in major units with the asset's precision
+    (`COPM` 2 decimals, `DUSD` 6) and sent in minor units. Conversion is exact:
+    digits are joined as text and read as integers, never as floating point
+    (`src/sales/money.ts`).
+  - A price change (`events.classes.setPrice`) applies only to later sales, and
+    the page says so. Changing the asset while classes are priced warns that
+    each price is then read in the new asset's minor units.
+ — on the event page (`US-B2`): several classes per event
   (`REQ-TC-1`), each with a name, description, provenance, attendance policy,
   restrictions and an optional quota, defined through `events.classes.define`.
   A `Purchased` class with a restriction is refused by the form before anything

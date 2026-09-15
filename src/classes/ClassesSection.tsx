@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useId, useState } from "react";
 import { useTRPC } from "../api/client";
 import { describeFailure } from "../api/errors";
+import { formatMinor, parsePrice, SALE_ASSETS, type SaleAsset } from "../sales/money";
 import {
   type ClassDraft,
   checkClass,
@@ -11,9 +12,91 @@ import {
   type PolicyKind,
   type Provenance,
   PURCHASED_RESTRICTION_REFUSAL,
+  type TicketClass,
 } from "./draft";
 
-function ClassForm({ event, onDefined }: { event: string; onDefined: (name: string) => void }) {
+/** Why a changed price leaves earlier sales alone (`F-021` plan, "Prices"). */
+const PRICE_CHANGE_NOTE =
+  "A new price applies only to sales from now on. Tickets already held or sold keep the price they were held at.";
+
+function priceOf(ticketClass: TicketClass, asset: SaleAsset | null): string {
+  if (ticketClass.price === null) {
+    return "Free";
+  }
+  return asset === null
+    ? `${ticketClass.price} minor units`
+    : formatMinor(ticketClass.price, asset);
+}
+
+function PriceForm({
+  event,
+  ticketClass,
+  asset,
+}: {
+  event: string;
+  ticketClass: TicketClass;
+  asset: SaleAsset;
+}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const id = useId();
+  const [price, setPrice] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
+  const change = useMutation(
+    trpc.events.classes.setPrice.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: trpc.events.classes.list.queryKey({ event }),
+        });
+        setPrice("");
+      },
+    }),
+  );
+  return (
+    <form
+      aria-label={`Change the price of ${ticketClass.name}`}
+      className="inline-form"
+      onSubmit={(submitted) => {
+        submitted.preventDefault();
+        const parsed = parsePrice(price, asset);
+        if (!parsed.ok) {
+          setProblem(parsed.problem);
+          return;
+        }
+        setProblem(null);
+        change.mutate({ event, class: ticketClass.id, price: parsed.minor });
+      }}
+    >
+      <label htmlFor={id}>
+        New price of {ticketClass.name} ({SALE_ASSETS[asset].code})
+      </label>
+      <input id={id} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
+      <button type="submit" disabled={change.isPending}>
+        Set price
+      </button>
+      {problem !== null ? (
+        <p role="alert" className="error">
+          {problem}
+        </p>
+      ) : null}
+      {change.isError ? (
+        <p role="alert" className="error">
+          {describeFailure(change.error)}
+        </p>
+      ) : null}
+    </form>
+  );
+}
+
+function ClassForm({
+  event,
+  asset,
+  onDefined,
+}: {
+  event: string;
+  asset: SaleAsset | null;
+  onDefined: (name: string) => void;
+}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const ids = {
@@ -23,6 +106,7 @@ function ClassForm({ event, onDefined }: { event: string; onDefined: (name: stri
     max: useId(),
     until: useId(),
     quota: useId(),
+    price: useId(),
   };
   const [draft, setDraft] = useState<ClassDraft>(emptyClass);
   const [problems, setProblems] = useState<readonly string[]>([]);
@@ -44,7 +128,7 @@ function ClassForm({ event, onDefined }: { event: string; onDefined: (name: stri
 
   function submit(submitted: FormEvent<HTMLFormElement>) {
     submitted.preventDefault();
-    const check = checkClass(event, draft);
+    const check = checkClass(event, draft, asset);
     if (!check.ok) {
       setProblems(check.problems);
       return;
@@ -87,6 +171,26 @@ function ClassForm({ event, onDefined }: { event: string; onDefined: (name: stri
           </label>
         ))}
       </fieldset>
+
+      {purchased ? (
+        <div className="field">
+          <label htmlFor={ids.price}>
+            Price{asset === null ? "" : ` (${SALE_ASSETS[asset].code})`}
+          </label>
+          <input
+            id={ids.price}
+            inputMode="decimal"
+            disabled={asset === null}
+            value={draft.price}
+            onChange={(e) => set("price", e.target.value)}
+          />
+          <p className="hint">
+            {asset === null
+              ? "Choose the event's sale asset first: a price is in that asset."
+              : `In ${SALE_ASSETS[asset].code}, with up to ${SALE_ASSETS[asset].decimals} decimal places after a dot. Kippu keeps prices; they never reach the ledger.`}
+          </p>
+        </div>
+      ) : null}
 
       <fieldset>
         <legend>Attendance policy</legend>
@@ -202,6 +306,9 @@ function ClassForm({ event, onDefined }: { event: string; onDefined: (name: stri
 export function ClassesSection({ event }: { event: string }) {
   const trpc = useTRPC();
   const classes = useQuery(trpc.events.classes.list.queryOptions({ event }));
+  const sale = useQuery(trpc.events.saleAsset.queryOptions({ event }));
+  const asset = sale.data?.asset ?? null;
+  const purchased = (classes.data ?? []).filter((defined) => defined.provenance === "Purchased");
   const [defined, setDefined] = useState<string | null>(null);
 
   return (
@@ -223,6 +330,7 @@ export function ClassesSection({ event }: { event: string }) {
               <th scope="col">Policy</th>
               <th scope="col">Restrictions</th>
               <th scope="col">Quota</th>
+              <th scope="col">Price</th>
             </tr>
           </thead>
           <tbody>
@@ -233,13 +341,23 @@ export function ClassesSection({ event }: { event: string }) {
                 <td>{describePolicy(ticketClass.policy)}</td>
                 <td>{describeRestrictions(ticketClass.restrictions)}</td>
                 <td>{ticketClass.quota ?? "None"}</td>
+                <td>{priceOf(ticketClass, asset)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : null}
+      {purchased.length > 0 && asset !== null ? (
+        <div className="prices">
+          <h3>Prices</h3>
+          <p className="hint">{PRICE_CHANGE_NOTE}</p>
+          {purchased.map((ticketClass) => (
+            <PriceForm key={ticketClass.id} event={event} ticketClass={ticketClass} asset={asset} />
+          ))}
+        </div>
+      ) : null}
       {defined === null ? null : <p role="status">Defined the class {defined}.</p>}
-      <ClassForm event={event} onDefined={setDefined} />
+      {sale.isPending ? null : <ClassForm event={event} asset={asset} onDefined={setDefined} />}
     </section>
   );
 }

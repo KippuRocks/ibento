@@ -150,3 +150,16 @@ code.url {
   border-left: 3px solid #b26a00;
   padding-left: 0.5rem;
 }
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-block: 0.5rem;
+}
+
+.inline-form .hint,
+.inline-form .error {
+  flex-basis: 100%;
+}

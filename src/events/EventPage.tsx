@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "../api/client";
 import { describeFailure } from "../api/errors";
 import { ClassesSection } from "../classes/ClassesSection";
+import { SaleSection } from "../sales/SaleSection";
 import { Screen } from "../screens/Screen";
 import { ScreenLink } from "../screens/ScreenLink";
 import { documentText, type EventView, eventName } from "./view";
@@ -128,6 +129,7 @@ function EventDetail({ event: id }: { event: string }) {
       </div>
       {description === null ? null : <p>{description}</p>}
       <Facts event={event} />
+      <SaleSection event={event.id} />
       <ClassesSection event={event.id} />
       <p className="note">
         Read from Kippu's copy of the ledger. Where the copy and the ledger disagree, the ledger is
