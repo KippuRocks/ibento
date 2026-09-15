@@ -1,7 +1,19 @@
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import { addVirtualAuthenticator } from "./support/authenticator";
 import { organiserEmail } from "./support/organiser";
+
+const HOLDER_STANDIN = "http://127.0.0.1:8089";
+
+/** tools/test-api/harness.mjs stands in for whoever has deployment access (`T-021-16`). */
+async function createReviewer(page: Page): Promise<{ email: string; code: string }> {
+  const email = `reviewer-${randomUUID()}@example.com`;
+  const response = await page.request.post(`${HOLDER_STANDIN}/reviewers`, { data: { email } });
+  expect(response.ok()).toBe(true);
+  const body = (await response.json()) as { email: string; code: string };
+  return { email, code: body.code };
+}
 
 interface ManifestScreen {
   readonly screenId: string;
@@ -142,7 +154,22 @@ test("every screen in screens.json renders its data-screen id, reached along dec
   await other.on("auth.unsupported");
   await context.close();
 
-  const visited = new Set([...walk.visited, ...other.visited]);
+  // Kippu's internal reviewer portal: a separate area of the same origin, walked
+  // independently — nothing links to it from the organiser console.
+  const reviewer = await createReviewer(page);
+  await page.goto("/#/reviewer/queue");
+  const reviewerWalk = new Walk(page);
+  await reviewerWalk.on("reviewer.sign-in");
+  await page.getByRole("button", { name: "I have an enrolment code" }).click();
+  await reviewerWalk.on("reviewer.enrol");
+  await page.getByLabel("Email").fill(reviewer.email);
+  await page.getByLabel("Enrolment code").fill(reviewer.code);
+  await page.getByRole("button", { name: "Register a passkey" }).click();
+  await reviewerWalk.on("reviewers.queue");
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await reviewerWalk.on("reviewer.sign-in");
+
+  const visited = new Set([...walk.visited, ...other.visited, ...reviewerWalk.visited]);
   expect(
     [...byId.keys()].filter((id) => !visited.has(id)),
     "screens no walk reached",

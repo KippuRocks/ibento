@@ -112,3 +112,13 @@ export function useLocation(): Location {
   const hash = useSyncExternalStore(subscribe, () => window.location.hash);
   return useMemo(() => parseLocation(hash), [hash]);
 }
+
+/**
+ * Whether the URL names Kippu's internal reviewer portal rather than the
+ * organiser console (`Root`): the two areas of one origin, chosen by the URL
+ * and never linked to each other (`T-021-16`, `T-021-08`).
+ */
+export function useReviewerArea(): boolean {
+  const hash = useSyncExternalStore(subscribe, () => window.location.hash);
+  return hash.startsWith("#/reviewer");
+}
