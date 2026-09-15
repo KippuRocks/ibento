@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "../api/client";
 import { describeFailure } from "../api/errors";
 import { ClassesSection } from "../classes/ClassesSection";
+import { PassWindowSection } from "../passes/PassWindowSection";
 import { SaleSection } from "../sales/SaleSection";
 import { Screen } from "../screens/Screen";
 import { ScreenLink } from "../screens/ScreenLink";
@@ -137,6 +138,7 @@ function EventDetail({ event: id }: { event: string }) {
       </div>
       {description === null ? null : <p>{description}</p>}
       <Facts event={event} />
+      <PassWindowSection event={event.id} />
       <SaleSection event={event.id} />
       <ClassesSection event={event.id} />
       <p className="note">

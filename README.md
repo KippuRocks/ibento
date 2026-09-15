@@ -84,6 +84,11 @@ holds a key.
   a window, and revokes a grant in one action. All of it lives in Kippu: the
   ledger never learns who an operator is (`REQ-OP-1`), and granting or revoking
   changes no ledger state (`AC-E5.1`).
+- **Pass window** (`NFR-5`) — on the event page: how long a holder's access
+  pass for the event stays valid, 60 seconds by default. The organiser sets it in
+  whole seconds through `events.setPassWindow`, within the bounds
+  `events.passWindow` reports (10 seconds to the ledger's maximum pass window);
+  the console never hard-codes them. It is Kippu's setting, not a ledger fact.
 - **Ticket classes** — on the event page (`US-B2`): several classes per event
   (`REQ-TC-1`), each with a name, description, provenance, attendance policy,
   restrictions and an optional quota, defined through `events.classes.define`.
