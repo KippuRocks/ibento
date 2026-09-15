@@ -4,7 +4,13 @@ import { describeFailure } from "../api/errors";
 import { eventName } from "../events/view";
 import { Screen } from "../screens/Screen";
 import { ScreenLink } from "../screens/ScreenLink";
-import { type AdmissionFlag, describeCause, describeDrift, describeOutcome } from "./flags";
+import {
+  type AdmissionFlag,
+  describeCause,
+  describeDrift,
+  describeOutcome,
+  explainCause,
+} from "./flags";
 
 function short(id: string): string {
   return `${id.slice(0, 12)}…`;
@@ -35,7 +41,10 @@ function Details({ flag }: { flag: AdmissionFlag }) {
 export function FlagRow({ flag, operatorName }: { flag: AdmissionFlag; operatorName: string }) {
   return (
     <tr data-testid="flag" data-cause={flag.cause}>
-      <td>{describeCause(flag.cause)}</td>
+      <td>
+        <strong>{describeCause(flag.cause)}</strong>
+        <p className="hint">{explainCause(flag.cause)}</p>
+      </td>
       <td>{flag.gate}</td>
       <td>{operatorName}</td>
       <td>{flag.refusal === null ? "None" : <code>{flag.refusal.errorCode}</code>}</td>
@@ -80,7 +89,8 @@ export function FlagsPage({ event: id }: { event: string }) {
         A gate admits before the ledger records the attendance. When the ledger then refuses such an
         admission, it is flagged here with its cause, as is any report from a gate whose clock was
         more than 10 seconds from Kippu's. Flags are read from Kippu's copy of the ledger: a refusal
-        explained by a transfer the copy has not read yet shows another reason until it has.
+        explained by a transfer the copy has not read yet shows another reason until it has. Flags
+        are evidence of what happened at the gates: no ticket can be changed from here.
       </p>
       {failure ? (
         <p role="alert" className="error">

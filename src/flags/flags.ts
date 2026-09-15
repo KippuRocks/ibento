@@ -19,6 +19,23 @@ export function describeCause(cause: AdmissionFlagCause): string {
   }
 }
 
+/**
+ * What a cause means for the organiser, in plain terms (`REQ-OP-3`). A flag is
+ * evidence of what happened at the gate; nothing can be done to a ticket from it.
+ */
+export function explainCause(cause: AdmissionFlagCause): string {
+  switch (cause) {
+    case "same-pass-at-two-gates":
+      return "One pass was admitted at two gates. The ledger recorded the attendance once and refused the other, so one of those admissions has no recorded attendance: the pass may have been copied or shared.";
+    case "transfer-before-recording":
+      return "The ticket changed hands after the gate admitted its pass and before the ledger recorded the attendance, so the ledger refused the pass: the person admitted no longer held the ticket.";
+    case "gate-clock-outside-tolerance":
+      return "The gate's clock was more than 10 seconds from Kippu's. A gate judges whether a pass has expired by its own clock, so its verdicts may be wrong until the device's time is corrected.";
+    case "unexplained":
+      return "The ledger refused this admission for a reason none of the other causes explains. Its refusal code says why.";
+  }
+}
+
 /** A gate's clock drift from Kippu's, signed, in seconds: `+30.0 s` means the gate was ahead. */
 export function describeDrift(ms: number): string {
   const tenths = Math.round(Math.abs(ms) / 100);

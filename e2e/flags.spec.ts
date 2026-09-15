@@ -153,6 +153,9 @@ test("REQ-OP-3 scripted refusals of provisional admissions appear in the flag in
   const replay = page.locator('[data-cause="same-pass-at-two-gates"]');
   await expect(replay).toHaveCount(1);
   await expect(replay).toContainText("Same pass admitted at two gates");
+  await expect(replay).toContainText(
+    "The ledger recorded the attendance once and refused the other",
+  );
   await expect(replay).toContainText("South door");
   await expect(replay).toContainText("Sami");
   await expect(replay).toContainText("ERR-PassReplayed");
@@ -162,6 +165,7 @@ test("REQ-OP-3 scripted refusals of provisional admissions appear in the flag in
   await expect(clocks).toHaveCount(2);
   const ahead = clocks.filter({ hasText: "ERR-PassExpired" });
   await expect(ahead).toContainText("Gate clock outside tolerance");
+  await expect(ahead).toContainText("until the device's time is corrected");
   await expect(ahead).toContainText("Noor");
   await expect(ahead).toContainText(/\+30\.\d s|\+29\.\d s/);
   const behind = clocks.filter({ hasText: "Sami" });
@@ -171,6 +175,10 @@ test("REQ-OP-3 scripted refusals of provisional admissions appear in the flag in
   const unexplained = page.locator('[data-cause="unexplained"]');
   await expect(unexplained).toHaveCount(1);
   await expect(unexplained).toContainText("Refused by the ledger for another reason");
+  await expect(unexplained).toContainText("Its refusal code says why.");
+
+  // Evidence only: nothing on the page acts on a ticket.
+  await expect(page.locator('[data-screen="event.flags"] button')).toHaveCount(0);
   await expect(unexplained).toContainText("ERR-InvalidPass");
 });
 

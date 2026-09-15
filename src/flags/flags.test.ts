@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeCause, describeDrift, describeOutcome } from "./flags";
+import { describeCause, describeDrift, describeOutcome, explainCause } from "./flags";
 
 describe("admission flags", () => {
   it("names every cause", () => {
@@ -7,6 +7,15 @@ describe("admission flags", () => {
     expect(describeCause("transfer-before-recording")).toMatch(/transferred between/);
     expect(describeCause("gate-clock-outside-tolerance")).toBe("Gate clock outside tolerance");
     expect(describeCause("unexplained")).toMatch(/another reason/);
+  });
+
+  it("explains what each cause means for the organiser", () => {
+    expect(explainCause("same-pass-at-two-gates")).toMatch(
+      /two gates.*recorded the attendance once/,
+    );
+    expect(explainCause("transfer-before-recording")).toMatch(/no longer held the ticket/);
+    expect(explainCause("gate-clock-outside-tolerance")).toMatch(/more than 10 seconds/);
+    expect(explainCause("unexplained")).toMatch(/refusal code says why/);
   });
 
   it("shows clock drift signed, in seconds to a tenth", () => {

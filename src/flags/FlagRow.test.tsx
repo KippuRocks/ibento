@@ -37,6 +37,7 @@ describe("a flagged admission", () => {
     expect(html).toContain(
       "Ticket transferred between the gate&#x27;s verdict and the ledger&#x27;s recording",
     );
+    expect(html).toContain("no longer held the ticket");
     expect(html).toContain("ERR-InvalidPass");
     expect(html).toContain("Noor");
     expect(html).toContain(
