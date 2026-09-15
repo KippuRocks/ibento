@@ -14,11 +14,22 @@
 // public tRPC routes over HTTP. Everything after that, redemption included, is
 // kippu-api's real API.
 //
+// The stand-in also does Saifu's other two direct-to-ledger jobs (`REQ-CL-1`), so
+// T-040-14's end-to-end check of the transfer-before-recording flag (`REQ-OP-3`) can
+// drive a real transfer and a real, refused pass presentation, rather than script an
+// error code: Ibento never holds a holder's key, so nothing in Ibento itself could do
+// either. Both act as a holder `/holders` already linked, by its account.
+//
 // The stand-in listens on 127.0.0.1 only, on KIPPU_HOLDER_STANDIN_PORT (default 8089):
-//   POST /holders   →   { "account": "<hex>", "token": "<holder session token>" }
+//   POST /holders          →  { "account": "<hex>", "token": "<holder session token>" }
+//   POST /transfers        →  { event, ticket, holder, receiver }
+//                          →  { "ok": true, "cursor": "<...>" } | { "ok": false, "errorCode": "<§10 code>" }
+//   POST /passes/submit    →  { ticket, holder, presentedAt? }
+//                          →  { "ok": true, "passId": "<hex>", "presentedAt": <ms> }
+//                             | { "ok": false, "errorCode": "<§10 code>", "passId": "<hex>", "presentedAt": <ms> }
 
 import { createServer as createHttpServer } from "node:http";
-import { signProofOfControl } from "@ticketto/profile-v0";
+import { producePass, signProofOfControl } from "@ticketto/profile-v0";
 import { simulatedWebAuthnSigner } from "@ticketto/profile-v0/testing";
 import { loadConfig } from "./dist/config.js";
 import { loadMetadataConfig, loadMetadataPublicUrl } from "./dist/metadata/config.js";
@@ -67,6 +78,11 @@ async function call(path, input) {
   return body.result.data;
 }
 
+// Every holder's signer, by account, for the lifetime of this process: so a later
+// call from a test — a transfer, a pass — can act as a holder `/holders` already
+// linked, exactly as Saifu would still hold that credential on the device.
+const signers = new Map();
+
 /** Saifu's side of linking: a credential on the ledger, then proof of control to kippu-api. */
 async function linkHolder() {
   const holder = simulatedWebAuthnSigner({ rpId: config.holderRpId });
@@ -91,24 +107,84 @@ async function linkHolder() {
     challengeId: link.challengeId,
     authorisation: hex(proof),
   });
+  signers.set(linked.holder.account, holder.signer);
   return { account: linked.holder.account, token: linked.session.token };
 }
 
+function signerFor(account) {
+  const signer = signers.get(account);
+  if (signer === undefined) {
+    throw new Error(`unknown holder ${account}: link it through POST /holders first`);
+  }
+  return signer;
+}
+
+/**
+ * A holder transfers a ticket directly through the ledger (`REQ-CL-1`, `US-D1`), as
+ * Saifu would, with no Kippu in the path. Answers the SDK's own verdict.
+ */
+async function transferTicket({ event, ticket, holder, receiver }) {
+  const submission = await server.ledger.transferTicket(signerFor(holder), {
+    event,
+    ticket,
+    receiver,
+  });
+  return submission.ok
+    ? { ok: true, cursor: submission.value.cursor }
+    : { ok: false, errorCode: submission.error.code };
+}
+
+/**
+ * A holder produces and presents an access pass directly to the ledger (`REQ-AP-1`,
+ * `REQ-CL-1`), exactly as Iriguchi's submission would: no Kippu in the path. Answers
+ * the ledger's real verdict — `ERR-InvalidPass` when the ticket left this holder
+ * before the ledger recorded it — for a test to report to `operators.reportAdmission`
+ * as Iriguchi would report what it just saw.
+ */
+async function submitPass({ ticket, holder, presentedAt }) {
+  const at = presentedAt ?? Date.now();
+  const pass = await producePass({ ticket, holder, notBefore: at - 1_000 }, signerFor(holder));
+  const submission = await server.ledger.submitAccessPass(pass, { presentedAt: at });
+  return {
+    ok: submission.ok,
+    ...(submission.ok ? {} : { errorCode: submission.error.code }),
+    passId: pass.pass.id,
+    presentedAt: at,
+  };
+}
+
+async function readJsonBody(request) {
+  const chunks = [];
+  for await (const chunk of request) {
+    chunks.push(chunk);
+  }
+  return chunks.length === 0 ? {} : JSON.parse(Buffer.concat(chunks).toString("utf8"));
+}
+
+const ROUTES = {
+  "POST /holders": () => linkHolder(),
+  "POST /transfers": (body) => transferTicket(body),
+  "POST /passes/submit": (body) => submitPass(body),
+};
+
 const standIn = createHttpServer((request, response) => {
-  if (request.method !== "POST" || request.url !== "/holders") {
+  const handler = ROUTES[`${request.method} ${request.url}`];
+  if (handler === undefined) {
     response.writeHead(404).end();
     return;
   }
-  linkHolder().then(
-    (holder) => {
-      response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(holder));
-    },
-    (error) => {
-      server.app.log.error(error);
-      response.writeHead(500, { "content-type": "application/json" });
-      response.end(JSON.stringify({ error: String(error) }));
-    },
-  );
+  readJsonBody(request)
+    .then(handler)
+    .then(
+      (result) => {
+        response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(result));
+      },
+      (error) => {
+        server.app.log.error(error);
+        response.writeHead(500, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: String(error) }));
+      },
+    );
 });
 standIn.listen(Number(process.env.KIPPU_HOLDER_STANDIN_PORT ?? 8089), "127.0.0.1");
 
