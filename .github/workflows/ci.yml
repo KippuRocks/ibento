@@ -119,7 +119,7 @@ jobs:
           retention-days: 7
 
   vendor:
-    name: Vendored @kippu/api reproduces from its pinned commit
+    name: Vendored @kippurocks/api reproduces from its pinned commit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

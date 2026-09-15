@@ -1,4 +1,4 @@
-import type { StatusChanged } from "@kippu/api";
+import type { StatusChanged } from "@kippurocks/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useId, useState } from "react";
 import { useTRPC, useTRPCClient } from "../api/client";

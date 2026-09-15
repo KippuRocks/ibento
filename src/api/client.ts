@@ -1,4 +1,4 @@
-import type { AppRouter } from "@kippu/api";
+import type { AppRouter } from "@kippurocks/api";
 import { createTRPCClient, httpBatchLink, type TRPCClient } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 

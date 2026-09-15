@@ -1,4 +1,4 @@
-import type { AppRouter } from "@kippu/api";
+import type { AppRouter } from "@kippurocks/api";
 import { startAuthentication, startRegistration } from "@simplewebauthn/browser";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { KippuClient } from "../api/client";

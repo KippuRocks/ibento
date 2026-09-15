@@ -33,9 +33,9 @@ importers:
       '@biomejs/biome':
         specifier: 2.5.13
         version: 2.5.13
-      '@kippu/api':
-        specifier: file:vendor/kippu-api/kippu-api-0.0.0.tgz
-        version: file:vendor/kippu-api/kippu-api-0.0.0.tgz(@trpc/server@11.18.0(typescript@7.0.2))
+      '@kippurocks/api':
+        specifier: file:vendor/kippu-api/kippurocks-api-0.0.0.tgz
+        version: file:vendor/kippu-api/kippurocks-api-0.0.0.tgz(@trpc/server@11.18.0(typescript@7.0.2))
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
@@ -129,8 +129,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@kippu/api@file:vendor/kippu-api/kippu-api-0.0.0.tgz':
-    resolution: {integrity: sha512-KvEZzYO06hPmoMRsW1ndbaEScQCpmGP8xC97GJoQ+0R2m4o5eMZEoK5xYAoyaygGqt1+jb7nyyyYZnxPAl5ibg==, tarball: file:vendor/kippu-api/kippu-api-0.0.0.tgz}
+  '@kippurocks/api@file:vendor/kippu-api/kippurocks-api-0.0.0.tgz':
+    resolution: {integrity: sha512-OGnkqR0YU6WJT0ranbGze+wCPkSp+SBTVn33+WOgO3Y+vF39Q859zkn0N30LOHsaiPPzhz/wasJFBixY78uaAg==, tarball: file:vendor/kippu-api/kippurocks-api-0.0.0.tgz}
     version: 0.0.0
     engines: {node: '>=24'}
     peerDependencies:
@@ -886,7 +886,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@kippu/api@file:vendor/kippu-api/kippu-api-0.0.0.tgz(@trpc/server@11.18.0(typescript@7.0.2))':
+  '@kippurocks/api@file:vendor/kippu-api/kippurocks-api-0.0.0.tgz(@trpc/server@11.18.0(typescript@7.0.2))':
     dependencies:
       '@trpc/server': 11.18.0(typescript@7.0.2)
 

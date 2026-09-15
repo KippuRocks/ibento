@@ -1,4 +1,4 @@
-import type { AppRouter } from "@kippu/api";
+import type { AppRouter } from "@kippurocks/api";
 import { TRPCClientError } from "@trpc/client";
 import { describe, expect, it } from "vitest";
 import { signInFailureMessage } from "./messages";

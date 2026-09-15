@@ -1,4 +1,4 @@
-import type { AppRouter } from "@kippu/api";
+import type { AppRouter } from "@kippurocks/api";
 import type { inferRouterInputs } from "@trpc/server";
 
 /** An event's public metadata document (`F-026`, contract `C6`). */

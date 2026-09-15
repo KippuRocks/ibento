@@ -1,4 +1,4 @@
-import type { AppRouter } from "@kippu/api";
+import type { AppRouter } from "@kippurocks/api";
 import { TRPCClientError } from "@trpc/client";
 
 /** How a failed call failed, as far as the client can tell. */

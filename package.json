@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.13",
-    "@kippu/api": "file:vendor/kippu-api/kippu-api-0.0.0.tgz",
+    "@kippurocks/api": "file:vendor/kippu-api/kippurocks-api-0.0.0.tgz",
     "@playwright/test": "1.63.0",
     "@types/node": "24.13.4",
     "@types/react": "19.3.0",

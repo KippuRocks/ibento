@@ -4,7 +4,7 @@ const CI = process.env.CI !== undefined;
 
 /**
  * End-to-end tests drive the built console in Chromium against the real
- * kippu-api, at the commit Ibento's `@kippu/api` types were vendored from
+ * kippu-api, at the commit Ibento's `@kippurocks/api` types were vendored from
  * (`tools/test-api.sh`).
  *
  * The console is served at `http://localhost:4173`: an origin kippu-api accepts

@@ -1,4 +1,4 @@
-import type { FinishSchedule } from "@kippu/api";
+import type { FinishSchedule } from "@kippurocks/api";
 
 export type { FinishSchedule };
 
