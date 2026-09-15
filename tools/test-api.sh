@@ -13,11 +13,15 @@
 # the server's memory. Ledger state is lost when it exits while the Kippu store keeps
 # its rows, so every start begins from an empty store.
 #
-# The Kippu store is PostgreSQL and metadata storage is S3-compatible (MinIO). CI passes
-# KIPPU_DATABASE_URL and the KIPPU_METADATA_S3_* keys for its own containers. Without
-# them, both are started locally from kippu-api's own compose file (Docker); the server
-# gets a database of its own there, recreated on every start, so kippu-api development
-# on the same store is not disturbed.
+# The Kippu store is PostgreSQL; metadata and capacity-proof storage are S3-compatible
+# (MinIO). CI passes KIPPU_DATABASE_URL and the KIPPU_METADATA_S3_*/KIPPU_PROOFS_S3_*
+# keys for its own containers. Locally, this script never starts a container of its
+# own — a laptop running several feature worktrees at once cannot spare one per
+# repository. It reuses whatever the machine already has running: the shared Kippu
+# store at KIPPU_DATABASE_URL's default below (one PostgreSQL instance every V0 repo
+# reads and writes its own database on), and shared MinIO on 127.0.0.1:59000. Ibento
+# gets its own database (dropped and recreated on every start) and its own buckets, so
+# it never disturbs another repo's data on the same shared instances.
 #
 # Login passkeys are bound to KIPPU_LOGIN_RP_ID, and ceremonies are accepted only from
 # KIPPU_LOGIN_ORIGINS. The defaults are Ibento's local origins on `localhost`. The holder
@@ -49,24 +53,62 @@ fi
 
 cd "$dir"
 
-if [[ -z "${KIPPU_DATABASE_URL:-}" || -z "${KIPPU_METADATA_S3_BUCKET:-}" ]]; then
-  # kippu-api's compose file: the Kippu store, and MinIO with the kippu-metadata bucket.
-  docker compose up -d --wait >&2
-fi
-
+# The shared local Kippu store (started once, outside any repository, never by this
+# script): Ibento gets its own database on it, recreated on every start.
 if [[ -z "${KIPPU_DATABASE_URL:-}" ]]; then
+  shared="${KIPPU_SHARED_DATABASE_URL:-postgres://kippu:kippu@127.0.0.1:55432/kippu}"
   database=ibento_e2e
-  docker compose exec -T kippu-store psql -U kippu_api -d kippu_api -v ON_ERROR_STOP=1 \
-    -c "DROP DATABASE IF EXISTS $database WITH (FORCE)" -c "CREATE DATABASE $database" >&2
-  export KIPPU_DATABASE_URL="postgres://kippu_api:kippu_api_local@127.0.0.1:54329/$database"
+  node -e '
+    const { Client } = require("pg");
+    const [admin, database] = process.argv.slice(1);
+    (async () => {
+      const client = new Client({ connectionString: admin });
+      await client.connect();
+      await client.query(`DROP DATABASE IF EXISTS ${database} WITH (FORCE)`);
+      await client.query(`CREATE DATABASE ${database}`);
+      await client.end();
+    })().catch((error) => { console.error(error); process.exit(1); });
+  ' "$shared" "$database" >&2
+  export KIPPU_DATABASE_URL="${shared%/*}/$database"
 fi
 
+# The shared local MinIO (likewise, never started by this script): Ibento's own
+# buckets, distinct from any other repository's, on whatever endpoint and root
+# credentials it was started with.
 if [[ -z "${KIPPU_METADATA_S3_BUCKET:-}" ]]; then
-  export KIPPU_METADATA_S3_BUCKET=kippu-metadata
-  export KIPPU_METADATA_S3_ENDPOINT=http://127.0.0.1:59000
+  export KIPPU_METADATA_S3_BUCKET=ibento-e2e-metadata
+  export KIPPU_METADATA_S3_ENDPOINT="${KIPPU_SHARED_S3_ENDPOINT:-http://127.0.0.1:59000}"
   export KIPPU_METADATA_S3_FORCE_PATH_STYLE=true
-  export KIPPU_METADATA_S3_ACCESS_KEY_ID=kippu_metadata
-  export KIPPU_METADATA_S3_SECRET_ACCESS_KEY=kippu_metadata_local
+  export KIPPU_METADATA_S3_ACCESS_KEY_ID="${KIPPU_SHARED_S3_ACCESS_KEY_ID:-kippu_metadata}"
+  export KIPPU_METADATA_S3_SECRET_ACCESS_KEY="${KIPPU_SHARED_S3_SECRET_ACCESS_KEY:-kippu_metadata_local}"
+fi
+if [[ -z "${KIPPU_PROOFS_S3_BUCKET:-}" ]]; then
+  export KIPPU_PROOFS_S3_BUCKET=ibento-e2e-proofs
+fi
+if [[ -z "${KIPPU_METADATA_S3_PROVISIONED:-}" ]]; then
+  node -e '
+    const {
+      S3Client, CreateBucketCommand, HeadBucketCommand,
+    } = require("@aws-sdk/client-s3");
+    const client = new S3Client({
+      region: "us-east-1",
+      forcePathStyle: true,
+      endpoint: process.env.KIPPU_METADATA_S3_ENDPOINT,
+      credentials: {
+        accessKeyId: process.env.KIPPU_METADATA_S3_ACCESS_KEY_ID,
+        secretAccessKey: process.env.KIPPU_METADATA_S3_SECRET_ACCESS_KEY,
+      },
+    });
+    (async () => {
+      for (const Bucket of [process.env.KIPPU_METADATA_S3_BUCKET, process.env.KIPPU_PROOFS_S3_BUCKET]) {
+        try {
+          await client.send(new HeadBucketCommand({ Bucket }));
+        } catch {
+          await client.send(new CreateBucketCommand({ Bucket }));
+        }
+      }
+    })().catch((error) => { console.error(error); process.exit(1); });
+  ' >&2
 fi
 
 export KIPPU_LEDGER_ENVIRONMENT=development
