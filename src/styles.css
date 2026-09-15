@@ -172,3 +172,12 @@ code.url {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.scroll {
+  overflow-x: auto;
+}
+
+ul.compact {
+  margin: 0;
+  padding-left: 1rem;
+}

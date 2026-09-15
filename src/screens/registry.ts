@@ -58,6 +58,11 @@ export const SCREENS = {
     route: "#/events/:event/operators",
     chrome: "console",
   },
+  "event.flags": {
+    title: "Admission flags",
+    route: "#/events/:event/flags",
+    chrome: "console",
+  },
   "operators.list": { title: "Operators", route: "#/operators", chrome: "console" },
   "operators.enrolment-code": {
     title: "Enrolment code",

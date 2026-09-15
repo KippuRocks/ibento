@@ -135,6 +135,14 @@ function EventDetail({ event: id }: { event: string }) {
         >
           Gate access
         </ScreenLink>
+        <ScreenLink
+          from="event.detail"
+          to="event.flags"
+          params={{ event: event.id }}
+          className="button"
+        >
+          Admission flags
+        </ScreenLink>
       </div>
       {description === null ? null : <p>{description}</p>}
       <Facts event={event} />

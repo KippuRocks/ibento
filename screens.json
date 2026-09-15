@@ -92,6 +92,7 @@
       "navigatesTo": [
         "auth.sign-in",
         "event.edit",
+        "event.flags",
         "event.guests",
         "event.operators",
         "events.list",
@@ -137,6 +138,17 @@
       "screenId": "event.operators",
       "route": "#/events/:event/operators",
       "title": "Gate access",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.detail",
+        "events.list",
+        "operators.list"
+      ]
+    },
+    {
+      "screenId": "event.flags",
+      "route": "#/events/:event/flags",
+      "title": "Admission flags",
       "navigatesTo": [
         "auth.sign-in",
         "event.detail",

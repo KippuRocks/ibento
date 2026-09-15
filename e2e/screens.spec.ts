@@ -109,6 +109,10 @@ test("every screen in screens.json renders its data-screen id, reached along dec
   await page.getByRole("link", { name: "Back to the event" }).click();
   await walk.on("event.detail");
 
+  await page.getByRole("link", { name: "Admission flags" }).click();
+  await walk.on("event.flags");
+  await page.getByRole("link", { name: "Back to the event" }).click();
+  await walk.on("event.detail");
   await page.getByRole("link", { name: "Gate access" }).click();
   await walk.on("event.operators");
   await page.getByRole("link", { name: "operators page" }).click();

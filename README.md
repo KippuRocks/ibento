@@ -89,6 +89,13 @@ holds a key.
   whole seconds through `events.setPassWindow`, within the bounds
   `events.passWindow` reports (10 seconds to the ledger's maximum pass window);
   the console never hard-codes them. It is Kippu's setting, not a ledger fact.
+- **Admission flags** (`REQ-OP-3`) — `#/events/<id>/flags`: every admission
+  decided at a gate that the ledger then refused, with its cause (the same pass
+  at two gates, a transfer between the gate's verdict and the recording, a gate
+  clock outside tolerance, or another reason), and every report from a gate
+  whose clock was more than 10 seconds from Kippu's. Read from
+  `derived.admissionFlags.list` every 10 seconds, with how far Kippu's copy has
+  read the ledger. Flags are evidence for the organiser, never ledger facts.
 - **Ticket classes** — on the event page (`US-B2`): several classes per event
   (`REQ-TC-1`), each with a name, description, provenance, attendance policy,
   restrictions and an optional quota, defined through `events.classes.define`.
