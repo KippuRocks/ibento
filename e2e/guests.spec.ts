@@ -5,7 +5,8 @@ import { query, signUpOrganiser } from "./support/organiser";
 const API = "http://127.0.0.1:8080/v0/trpc";
 /** tools/test-api/harness.mjs: Saifu's side of holder linking, stood in for a test. */
 const HOLDER_STANDIN = "http://127.0.0.1:8089/holders";
-const PLACEHOLDER_SAIFU_LINK_BASE = "https://saifu.kippu.example/invitations/";
+/** Saifu's invitation screen at the placeholder origin; the token follows in the fragment. */
+const INVITATION_LINK_PREFIX = "https://saifu.kippu.example/invitations#";
 
 interface Holder {
   readonly account: string;
@@ -104,7 +105,7 @@ test("US-B2 a guest who links in Saifu receives the class's ticket (REQ-TC-4)", 
 
   // The organiser invites a guest to a seat, and gets the link once.
   const link = await invite(page, "A-1", "Ada");
-  expect(link.startsWith(PLACEHOLDER_SAIFU_LINK_BASE)).toBe(true);
+  expect(link.startsWith(INVITATION_LINK_PREFIX)).toBe(true);
   await page.getByRole("button", { name: "Copy link" }).click();
   await expect(page.getByRole("status")).toHaveText("Copied.");
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(link);
@@ -116,7 +117,7 @@ test("US-B2 a guest who links in Saifu receives the class's ticket (REQ-TC-4)", 
   await expect(page.getByLabel("Invitation link")).toHaveCount(0);
 
   // The guest follows the link to Saifu, links a holder account there and redeems the token.
-  const token = decodeURIComponent(link.slice(PLACEHOLDER_SAIFU_LINK_BASE.length));
+  const token = link.slice(INVITATION_LINK_PREFIX.length);
   const guest = await linkedGuest(page);
   const redeemed = await asHolder<{ ticket: string; cursor: string; class: string }>(
     page,
@@ -187,8 +188,7 @@ test("an invitation to a seat that already has one is warned about, and the seco
   const second = await invite(page, "A-2", "Second guest");
   await page.getByRole("button", { name: "Done" }).click();
 
-  const tokenOf = (link: string) =>
-    decodeURIComponent(link.slice(PLACEHOLDER_SAIFU_LINK_BASE.length));
+  const tokenOf = (link: string) => link.slice(INVITATION_LINK_PREFIX.length);
   const winner = await asHolder(page, await linkedGuest(page), "events.invitations.redeem", {
     token: tokenOf(first),
   });

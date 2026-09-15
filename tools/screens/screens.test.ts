@@ -65,6 +65,20 @@ describe("the screen manifest", () => {
     expect(problems).toEqual([]);
   });
 
+  it("records an edge to another app's screen it declares, and refuses one it does not", () => {
+    const extracted = extractFile(
+      "src/x.ts",
+      `transition("a.detail", "saifu:invitation.redeem"); transition("a.list", "saifu:gone");`,
+    );
+    const { manifest, problems } = buildManifest(extracted, registry, chrome, [
+      "saifu:invitation.redeem",
+    ]);
+    expect(manifest.screens.find((screen) => screen.screenId === "a.detail")?.navigatesTo).toEqual([
+      "saifu:invitation.redeem",
+    ]);
+    expect(problems.map(({ message }) => message)).toEqual(['unknown to screen "saifu:gone"']);
+  });
+
   it("reports an edge to a screen the router does not have", () => {
     const extracted = extractFile("src/x.ts", `transition("a.list", "a.gone");`);
     const { problems } = buildManifest(extracted, registry, chrome);

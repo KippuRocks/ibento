@@ -50,10 +50,11 @@ holds a key.
   - `events.invitations.create` returns the invitation's token once. The link is
     shown right after creation, with a copy button, and never again: a lost link
     means a new invitation, and the page says so.
-  - The link is `SAIFU_LINK_BASE` followed by the token. Its format and host
-    belong to Saifu's handoff (`T-030-10`), which is not built; until then
-    `SAIFU_LINK_BASE`, read when the console is built, defaults to the placeholder
-    `https://saifu.kippu.example/invitations/`.
+  - The link is `<SAIFU_LINK_BASE>/invitations#<token>`, the format Saifu's
+    handoff defines (`T-030-10`): the token travels in the fragment.
+    `SAIFU_LINK_BASE` is Saifu's https origin with no path, read when the console
+    is built (a malformed one fails the build). Saifu's host is not chosen, so it
+    defaults to the placeholder `https://saifu.kippu.example`.
   - The list (`events.invitations.list`) shows each invitation's status, the
     holder account that redeemed it and the ticket issued, refreshing while any
     is waiting. Creating an invitation for a seat that already has an open or
@@ -70,8 +71,11 @@ holds a key.
     digits are joined as text and read as integers, never as floating point
     (`src/sales/money.ts`).
   - A price change (`events.classes.setPrice`) applies only to later sales, and
-    the page says so. Changing the asset while classes are priced warns that
-    each price is then read in the new asset's minor units.
+    the page says so.
+  - Changing the asset clears every `Purchased` class's price, and the event is
+    not on sale until each is priced again. The page asks before a change that
+    would clear prices, names the classes, and marks unpriced ones as needing a
+    price.
  — on the event page (`US-B2`): several classes per event
   (`REQ-TC-1`), each with a name, description, provenance, attendance policy,
   restrictions and an optional quota, defined through `events.classes.define`.
@@ -97,8 +101,11 @@ the navigation map.
 - **Every navigation declares its edge**, naming both screens literally:
   `<ScreenLink from to params>` for links, `navigate(from, to, params)` from
   code, and `transition(from, to)` where the screen changes without the router
-  (a wizard step, signing in or out). `from` may be a chrome, such as
-  `chrome:console` for the header, whose edges belong to every screen inside it.
+  (a wizard step, signing in or out, a handoff to another app). `from` may be a
+  chrome, such as `chrome:console` for the header, whose edges belong to every
+  screen inside it. `to` may be another app's screen, written `<app>:<screenId>`
+  as that app's manifest names it and listed in `EXTERNAL_SCREENS`, such as
+  `saifu:invitation.redeem`, which the invitation link opens.
 - **`pnpm screens:write`** regenerates `screens.json`. **`pnpm screens:check`**
   (CI) fails when it is out of date, when a navigation names a screen
   non-literally or one the router lacks, and when anything navigates around the

@@ -4,15 +4,32 @@ import type { inferRouterOutputs } from "@trpc/server";
 export type Invitation = inferRouterOutputs<AppRouter>["events"]["invitations"]["list"][number];
 
 /**
- * Where invitation links point until Saifu's handoff (`T-030-10`) defines their
- * format and host: a placeholder, replaced by setting `SAIFU_LINK_BASE` when
- * the console is built.
+ * Saifu's origin, which invitation links open (`T-030-10`): an https origin with
+ * no path, set as `SAIFU_LINK_BASE` when the console is built. Saifu's host is
+ * not chosen yet, so the default is a placeholder.
  */
-export const PLACEHOLDER_SAIFU_LINK_BASE = "https://saifu.kippu.example/invitations/";
+export const PLACEHOLDER_SAIFU_LINK_BASE = "https://saifu.kippu.example";
 
-/** The link a guest follows to Saifu: the configured base, then the token. */
+/** Whether a value is what `SAIFU_LINK_BASE` must be: an https origin, with no path. */
+export function isSaifuLinkBase(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.origin === value;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The link a guest follows to Saifu's invitation screen, in the format Saifu's
+ * handoff defines: `<SAIFU_LINK_BASE>/invitations#<token>`. The token travels in
+ * the fragment, which browsers never send to a server.
+ */
 export function invitationLink(token: string, base: string = PLACEHOLDER_SAIFU_LINK_BASE): string {
-  return `${base}${encodeURIComponent(token)}`;
+  if (!isSaifuLinkBase(base)) {
+    throw new Error(`SAIFU_LINK_BASE must be an https origin with no path, not ${base}`);
+  }
+  return `${base}/invitations#${token}`;
 }
 
 /** Seat designations are compared as kippu-api stores them: in Unicode NFC. */

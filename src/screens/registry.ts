@@ -57,5 +57,14 @@ export const SCREENS = {
 
 export type ScreenId = keyof typeof SCREENS;
 
+/**
+ * Screens of other Kippu apps that Ibento's screens lead to, written
+ * `<app>:<screenId>` with the id that app's own manifest gives the screen. A
+ * transition to one is an edge between apps in `kippu-e2e`'s navigation map.
+ */
+export const EXTERNAL_SCREENS = ["saifu:invitation.redeem"] as const;
+
+export type ExternalScreenId = (typeof EXTERNAL_SCREENS)[number];
+
 /** Where the router sends a URL that names no screen. */
 export const FALLBACK_SCREEN = "events.list" satisfies ScreenId;
