@@ -8,6 +8,7 @@ import { EditEventPage } from "./events/EditEventPage";
 import { EventPage } from "./events/EventPage";
 import { EventsPage } from "./events/EventsPage";
 import { NewEventWizard } from "./events/NewEventWizard";
+import { FlagsPage } from "./flags/FlagsPage";
 import { GuestListPage } from "./guests/GuestListPage";
 import { EventOperatorsPage } from "./operators/EventOperatorsPage";
 import { OperatorsPage } from "./operators/OperatorsPage";
@@ -31,6 +32,8 @@ function Page({ location }: { location: Location }) {
     case "event.guests":
     case "event.guests.link":
       return <GuestListPage key={event} event={event} />;
+    case "event.flags":
+      return <FlagsPage key={event} event={event} />;
     case "event.operators":
       return <EventOperatorsPage key={event} event={event} />;
     case "operators.list":
