@@ -1,0 +1,104 @@
+{
+  "format": "kippu.screens/1",
+  "app": "ibento",
+  "platform": "web",
+  "screens": [
+    {
+      "screenId": "auth.sign-in",
+      "route": null,
+      "title": "Sign in",
+      "navigatesTo": [
+        "auth.sign-up",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "auth.sign-up",
+      "route": null,
+      "title": "Create an organiser account",
+      "navigatesTo": [
+        "auth.sign-in",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "auth.unsupported",
+      "route": null,
+      "title": "Passkeys unsupported",
+      "navigatesTo": []
+    },
+    {
+      "screenId": "events.list",
+      "route": "#/events",
+      "title": "Your events",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.create.details",
+        "event.detail"
+      ]
+    },
+    {
+      "screenId": "event.create.details",
+      "route": "#/events/new",
+      "title": "New event: details",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.create.zones",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "event.create.zones",
+      "route": "#/events/new",
+      "title": "New event: zones",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.create.capacity",
+        "event.create.details",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "event.create.capacity",
+      "route": "#/events/new",
+      "title": "New event: capacity",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.create.review",
+        "event.create.zones",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "event.create.review",
+      "route": "#/events/new",
+      "title": "New event: review",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.create.capacity",
+        "event.detail",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "event.detail",
+      "route": "#/events/:event",
+      "title": "Event",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.edit",
+        "events.list"
+      ]
+    },
+    {
+      "screenId": "event.edit",
+      "route": "#/events/:event/edit",
+      "title": "Edit event",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.detail",
+        "events.list"
+      ]
+    }
+  ]
+}

@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useState } from "react";
 import { useTRPC } from "../api/client";
 import { describeFailure } from "../api/errors";
-import { hrefOf, navigate } from "../routing";
+import { navigate } from "../screens/router";
+import { Screen } from "../screens/Screen";
+import { ScreenLink } from "../screens/ScreenLink";
 import {
   detailsOf,
   detailsProblems,
@@ -113,7 +115,7 @@ function EditForm({ event }: { event: EventView }) {
     trpc.metadata.events.put.mutationOptions({
       onSuccess: async () => {
         await queryClient.invalidateQueries({ queryKey: trpc.derived.events.pathKey() });
-        navigate({ name: "event", event: event.id });
+        navigate("event.edit", "event.detail", { event: event.id });
       },
     }),
   );
@@ -177,7 +179,9 @@ function EditForm({ event }: { event: EventView }) {
         Saving replaces the event's public document. Nothing is written to the ledger.
       </p>
       <div className="actions">
-        <a href={hrefOf({ name: "event", event: event.id })}>Cancel</a>
+        <ScreenLink from="event.edit" to="event.detail" params={{ event: event.id }}>
+          Cancel
+        </ScreenLink>
         <button type="submit" disabled={save.isPending}>
           Save changes
         </button>
@@ -191,7 +195,15 @@ function EditForm({ event }: { event: EventView }) {
  * images. An edit writes the document and nothing else — no ledger write occurs
  * (`AC-A3.1`).
  */
-export function EditEventPage({ event: id }: { event: string }) {
+export function EditEventPage({ event }: { event: string }) {
+  return (
+    <Screen id="event.edit">
+      <EditEvent event={event} />
+    </Screen>
+  );
+}
+
+function EditEvent({ event: id }: { event: string }) {
   const trpc = useTRPC();
   const read = useQuery(
     trpc.derived.events.get.queryOptions(

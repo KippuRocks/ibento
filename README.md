@@ -50,6 +50,35 @@ holds a key.
   `ERR-RestrictionNotPermitted`. `Cannot be transferred` carries
   `Cannot be resold` with it (`REQ-TK-2`).
 
+## Screens
+
+Every screen has a stable `screenId`, carried in the rendered tree as
+`data-screen`, and `screens.json` lists them all with their routes, titles and
+the screens each can navigate to (`F-070` plan §5.4). `kippu-e2e` merges it into
+the navigation map.
+
+- **The router is the table** in `src/screens/registry.ts`: each screen's id,
+  title, route and chrome. The router resolves a URL to the first screen
+  declared for its route; a multi-step flow's steps share one route. Ids name
+  what the screen is for, as `area.subject.step`, never copy or indices, and
+  are not renamed once used.
+- **Every screen renders inside `<Screen id>`**, which sets `data-screen` and
+  the document title.
+- **Every navigation declares its edge**, naming both screens literally:
+  `<ScreenLink from to params>` for links, `navigate(from, to, params)` from
+  code, and `transition(from, to)` where the screen changes without the router
+  (a wizard step, signing in or out). `from` may be a chrome, such as
+  `chrome:console` for the header, whose edges belong to every screen inside it.
+- **`pnpm screens:write`** regenerates `screens.json`. **`pnpm screens:check`**
+  (CI) fails when it is out of date, when a navigation names a screen
+  non-literally or one the router lacks, and when anything navigates around the
+  declarations: an `<a href>`, `window.location`, or `hrefOf` outside
+  `src/screens/`.
+- **`e2e/screens.spec.ts`** walks the console through every screen in
+  `screens.json`, and fails if a step shows no `data-screen`, more than one, or
+  one not in the manifest; if a transition taken is not declared; or if any
+  manifest screen is never reached.
+
 ## Development
 
 Requires Node 24 or later, pnpm (the version is pinned in `package.json`), and
@@ -60,6 +89,7 @@ pnpm install
 pnpm lint        # Biome
 pnpm typecheck
 pnpm test        # Vitest
+pnpm screens:check  # screens.json matches the router and the declared navigation
 pnpm build       # emits dist/
 pnpm test-api    # runs kippu-api on 127.0.0.1:8080 (see below)
 pnpm dev         # serves the console on http://localhost:5173

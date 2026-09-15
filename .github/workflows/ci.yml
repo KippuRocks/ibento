@@ -34,6 +34,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - name: The screen manifest is up to date, and every navigation declares its edge
+        run: pnpm screens:check
       - run: pnpm build
 
   e2e:

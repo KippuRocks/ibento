@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!vendor"]
+    "includes": ["**", "!vendor", "!screens.json"]
   },
   "formatter": {
     "enabled": true,

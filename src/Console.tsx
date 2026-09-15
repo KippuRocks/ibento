@@ -8,18 +8,23 @@ import { EditEventPage } from "./events/EditEventPage";
 import { EventPage } from "./events/EventPage";
 import { EventsPage } from "./events/EventsPage";
 import { NewEventWizard } from "./events/NewEventWizard";
-import { hrefOf, type Route, useRoute } from "./routing";
+import { type Location, transition, useLocation } from "./screens/router";
+import { ScreenLink } from "./screens/ScreenLink";
 
-function Page({ route }: { route: Route }) {
-  switch (route.name) {
-    case "events":
+function Page({ location }: { location: Location }) {
+  const event = location.params.event ?? "";
+  switch (location.screen) {
+    case "events.list":
       return <EventsPage />;
-    case "new-event":
+    case "event.create.details":
+    case "event.create.zones":
+    case "event.create.capacity":
+    case "event.create.review":
       return <NewEventWizard />;
-    case "event":
-      return <EventPage key={route.event} event={route.event} />;
-    case "edit-event":
-      return <EditEventPage key={route.event} event={route.event} />;
+    case "event.detail":
+      return <EventPage key={event} event={event} />;
+    case "event.edit":
+      return <EditEventPage key={event} event={event} />;
   }
 }
 
@@ -28,12 +33,13 @@ export function Console({ session }: { session: StoredSession }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { signedOut } = useSession();
-  const route = useRoute();
+  const location = useLocation();
 
   const current = useQuery(trpc.auth.session.current.queryOptions(undefined, { retry: false }));
   const signOut = useMutation(
     trpc.auth.session.signOut.mutationOptions({
       onSettled() {
+        transition("chrome:console", "auth.sign-in");
         signedOut();
         queryClient.clear();
       },
@@ -46,6 +52,7 @@ export function Console({ session }: { session: StoredSession }) {
     (current.isSuccess && current.data.principal.kind !== "organiser");
   useEffect(() => {
     if (rejected) {
+      transition("chrome:console", "auth.sign-in");
       signedOut();
       queryClient.clear();
     }
@@ -54,11 +61,13 @@ export function Console({ session }: { session: StoredSession }) {
   return (
     <>
       <header className="console-header">
-        <a className="brand" href={hrefOf({ name: "events" })}>
+        <ScreenLink from="chrome:console" to="events.list" params={{}} className="brand">
           Ibento
-        </a>
+        </ScreenLink>
         <nav>
-          <a href={hrefOf({ name: "events" })}>Your events</a>
+          <ScreenLink from="chrome:console" to="events.list" params={{}}>
+            Your events
+          </ScreenLink>
         </nav>
         <span className="account">
           {current.isSuccess && !rejected ? (
@@ -78,7 +87,7 @@ export function Console({ session }: { session: StoredSession }) {
             Kippu could not be reached. Try again.
           </p>
         ) : null}
-        {current.isSuccess && !rejected ? <Page route={route} /> : null}
+        {current.isSuccess && !rejected ? <Page location={location} /> : null}
       </div>
     </>
   );
