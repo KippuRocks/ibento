@@ -8,6 +8,7 @@ import { EditEventPage } from "./events/EditEventPage";
 import { EventPage } from "./events/EventPage";
 import { EventsPage } from "./events/EventsPage";
 import { NewEventWizard } from "./events/NewEventWizard";
+import { GuestListPage } from "./guests/GuestListPage";
 import { type Location, transition, useLocation } from "./screens/router";
 import { ScreenLink } from "./screens/ScreenLink";
 
@@ -25,6 +26,9 @@ function Page({ location }: { location: Location }) {
       return <EventPage key={event} event={event} />;
     case "event.edit":
       return <EditEventPage key={event} event={event} />;
+    case "event.guests":
+    case "event.guests.link":
+      return <GuestListPage key={event} event={event} />;
   }
 }
 

@@ -20,10 +20,11 @@ export interface ParsedPositions {
  * A seated zone's canonical positions, one designation per line (`F-021` plan
  * §5.3).
  *
- * A designation is taken exactly as written: its UTF-8 bytes are the position,
- * so `C-14` and `c14` are two seats, and so are `C-14` and `C-14 ` with a
- * trailing space. Only the line break is removed. Empty lines are skipped, and a
- * designation written twice is one position.
+ * A designation is taken as written: case and spaces count, so `C-14` and `c14`
+ * are two seats, and so are `C-14` and `C-14 ` with a trailing space. kippu-api
+ * normalises designations to Unicode NFC (`T-021-06`), so visually identical
+ * spellings are one seat. Only the line break is removed here. Empty lines are
+ * skipped, and a designation written twice is one position.
  */
 export function parsePositions(text: string): ParsedPositions {
   const seen = new Set<string>();

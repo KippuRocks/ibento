@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs kippu-api — the real server, at the commit vendor/kippu-api/source.json records —
-# as the test API Ibento's end-to-end tests run against.
+# as the test API Ibento's end-to-end tests run against, with a stand-in for Saifu's side of
+# holder linking on 127.0.0.1:8089 (see tools/test-api/harness.mjs).
 #
 #   tools/test-api.sh
 #
@@ -77,4 +78,6 @@ export HOST="${KIPPU_API_HOST:-127.0.0.1}"
 export PORT="${KIPPU_API_PORT:-8080}"
 
 node dist/store/migrate-cli.js >&2
-exec node dist/server.js
+# kippu-api's server with a stand-in for Saifu's holder linking (tools/test-api/harness.mjs).
+cp "$root/tools/test-api/harness.mjs" ibento-test-api.mjs
+exec node ibento-test-api.mjs
