@@ -24,6 +24,11 @@
 // the same KIPPU_PROOFS_S3_* keys `tools/test-api.sh` sets: without it, a capacity
 // increase request fails before it can be reviewed.
 //
+// It also stands in for whoever has deployment access to create a reviewer account
+// (`T-021-16`): there is deliberately no HTTP path for that in kippu-api (`F-021` plan
+// §5.4, "no admin surface in V0"), so a test creates one the same way the command line
+// does — directly against the store, in this same process.
+//
 // The stand-in listens on 127.0.0.1 only, on KIPPU_HOLDER_STANDIN_PORT (default 8089):
 //   POST /holders          →  { "account": "<hex>", "token": "<holder session token>" }
 //   POST /transfers        →  { event, ticket, holder, receiver }
@@ -31,6 +36,8 @@
 //   POST /passes/submit    →  { ticket, holder, presentedAt? }
 //                          →  { "ok": true, "passId": "<hex>", "presentedAt": <ms> }
 //                             | { "ok": false, "errorCode": "<§10 code>", "passId": "<hex>", "presentedAt": <ms> }
+//   POST /reviewers        →  { email }
+//                          →  { "email": "<email>", "code": "<one-time code>", "codeExpiresAt": "<ISO 8601>" }
 
 import { createServer as createHttpServer } from "node:http";
 import { producePass, signProofOfControl } from "@ticketto/profile-v0";
@@ -39,6 +46,7 @@ import { loadConfig } from "./dist/config.js";
 import { loadMetadataConfig, loadMetadataPublicUrl } from "./dist/metadata/config.js";
 import { createS3MetadataStorage } from "./dist/metadata/storage.js";
 import { createS3ProofArtefactStorage, loadProofStorageConfig } from "./dist/proofs/artefacts.js";
+import { createReviewers } from "./dist/reviewers/service.js";
 import { assertMigrated } from "./dist/store/migrate.js";
 import { createStore } from "./dist/store/store.js";
 import { createServer } from "./dist/wiring.js";
@@ -163,6 +171,23 @@ async function submitPass({ ticket, holder, presentedAt }) {
   };
 }
 
+const reviewers = createReviewers({ store, relyingParty: config.login });
+
+/**
+ * Creates a reviewer account and issues its one-time enrolment code, exactly as
+ * `pnpm reviewer:create --email <email>` does (`T-021-16`): the only way one is
+ * made, by design. A test redeems the code through Ibento's own reviewer
+ * enrolment screen, as a real reviewer would.
+ */
+async function createReviewer({ email }) {
+  const created = await reviewers.create(email);
+  return {
+    email: created.reviewer.email,
+    code: created.code,
+    codeExpiresAt: created.codeExpiresAt,
+  };
+}
+
 async function readJsonBody(request) {
   const chunks = [];
   for await (const chunk of request) {
@@ -175,6 +200,7 @@ const ROUTES = {
   "POST /holders": () => linkHolder(),
   "POST /transfers": (body) => transferTicket(body),
   "POST /passes/submit": (body) => submitPass(body),
+  "POST /reviewers": (body) => createReviewer(body),
 };
 
 const standIn = createHttpServer((request, response) => {

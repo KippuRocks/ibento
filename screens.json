@@ -175,6 +175,32 @@
         "events.list",
         "operators.list"
       ]
+    },
+    {
+      "screenId": "reviewer.sign-in",
+      "route": null,
+      "title": "Reviewer sign-in",
+      "navigatesTo": [
+        "reviewer.enrol",
+        "reviewers.queue"
+      ]
+    },
+    {
+      "screenId": "reviewer.enrol",
+      "route": null,
+      "title": "Redeem an enrolment code",
+      "navigatesTo": [
+        "reviewer.sign-in",
+        "reviewers.queue"
+      ]
+    },
+    {
+      "screenId": "reviewers.queue",
+      "route": "#/reviewer/queue",
+      "title": "Capacity proof review queue",
+      "navigatesTo": [
+        "reviewer.sign-in"
+      ]
     }
   ]
 }

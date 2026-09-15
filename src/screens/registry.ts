@@ -28,6 +28,7 @@ export interface ScreenDefinition {
 /** Navigation shared by every screen shown inside it, such as the console's header. */
 export const CHROME = {
   console: { title: "Console header" },
+  reviewer: { title: "Reviewer console header" },
 } as const;
 
 export type ChromeId = keyof typeof CHROME;
@@ -68,6 +69,13 @@ export const SCREENS = {
     title: "Enrolment code",
     route: "#/operators",
     chrome: "console",
+  },
+  "reviewer.sign-in": { title: "Reviewer sign-in", route: null, chrome: null },
+  "reviewer.enrol": { title: "Redeem an enrolment code", route: null, chrome: null },
+  "reviewers.queue": {
+    title: "Capacity proof review queue",
+    route: "#/reviewer/queue",
+    chrome: "reviewer",
   },
 } as const satisfies Readonly<Record<string, ScreenDefinition>>;
 
