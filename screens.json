@@ -61,7 +61,7 @@
     {
       "screenId": "event.create.capacity",
       "route": "#/events/new",
-      "title": "New event: capacity",
+      "title": "New event: capacity and sale",
       "navigatesTo": [
         "auth.sign-in",
         "event.create.review",

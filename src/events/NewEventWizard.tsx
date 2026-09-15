@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { useTRPC, useTRPCClient } from "../api/client";
 import { describeFailure } from "../api/errors";
+import { NOT_ON_SALE, SALE_ASSET_IDS, SALE_ASSETS, type SaleAsset } from "../sales/money";
 import { navigate, transition } from "../screens/router";
 import { Screen } from "../screens/Screen";
 import { detailsProblems, type EventDetailsDraft, emptyDetails, eventDocument } from "./document";
@@ -30,7 +31,7 @@ type Step =
 const STEPS: readonly { readonly step: Step; readonly title: string }[] = [
   { step: "event.create.details", title: "Details" },
   { step: "event.create.zones", title: "Zones" },
-  { step: "event.create.capacity", title: "Capacity" },
+  { step: "event.create.capacity", title: "Capacity and sale" },
   { step: "event.create.review", title: "Review" },
 ];
 
@@ -177,6 +178,8 @@ export function NewEventWizard() {
   const [zones, setZones] = useState<readonly ZoneDraft[]>([]);
   const [limited, setLimited] = useState(false);
   const [capacity, setCapacity] = useState("");
+  const [saleAsset, setSaleAsset] = useState<SaleAsset | "">("");
+  const saleAssetId = useId();
   const [problems, setProblems] = useState<readonly string[]>([]);
   const [stage, setStage] = useState<Stage | null>(null);
   const [created, setCreated] = useState<{ event: string; cursor: string } | null>(null);
@@ -190,6 +193,7 @@ export function NewEventWizard() {
         event = await client.events.create.mutate({
           zones: zones.map(({ id, kind }) => ({ id, kind })),
           capacity: bound === "invalid" ? null : bound,
+          saleAsset: saleAsset === "" ? null : saleAsset,
         });
         setCreated(event);
       }
@@ -304,6 +308,30 @@ export function NewEventWizard() {
           ) : null}
         </fieldset>
       ) : null}
+      {step === "event.create.capacity" ? (
+        <fieldset>
+          <legend>Sale</legend>
+          <p className="hint">
+            What the event's tickets are priced in. Without one the event is not on sale; you can
+            choose it later, until the event's first hold.
+          </p>
+          <div className="field">
+            <label htmlFor={saleAssetId}>Sale asset</label>
+            <select
+              id={saleAssetId}
+              value={saleAsset}
+              onChange={(event) => setSaleAsset(event.target.value as SaleAsset | "")}
+            >
+              <option value="">None yet: not on sale</option>
+              {SALE_ASSET_IDS.map((asset) => (
+                <option key={asset} value={asset}>
+                  {SALE_ASSETS[asset].code} ({asset})
+                </option>
+              ))}
+            </select>
+          </div>
+        </fieldset>
+      ) : null}
       {step === "event.create.review" ? (
         <div>
           <h2>Review</h2>
@@ -327,6 +355,8 @@ export function NewEventWizard() {
             </dd>
             <dt>Capacity</dt>
             <dd>{bound === null ? "Unbounded" : String(bound)}</dd>
+            <dt>Sale asset</dt>
+            <dd>{saleAsset === "" ? NOT_ON_SALE : SALE_ASSETS[saleAsset].code}</dd>
           </dl>
           {seated.some((zone) => parsePositions(zone.positions).positions.length === 0) ? (
             <p className="hint">

@@ -40,7 +40,7 @@ export const SCREENS = {
   "event.create.details": { title: "New event: details", route: "#/events/new", chrome: "console" },
   "event.create.zones": { title: "New event: zones", route: "#/events/new", chrome: "console" },
   "event.create.capacity": {
-    title: "New event: capacity",
+    title: "New event: capacity and sale",
     route: "#/events/new",
     chrome: "console",
   },
