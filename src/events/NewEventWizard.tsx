@@ -2,7 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { useTRPC, useTRPCClient } from "../api/client";
 import { describeFailure } from "../api/errors";
-import { navigate } from "../routing";
+import { navigate, transition } from "../screens/router";
+import { Screen } from "../screens/Screen";
 import { detailsProblems, type EventDetailsDraft, emptyDetails, eventDocument } from "./document";
 import { DetailsStep, Field, TextField } from "./fields";
 import { randomId32 } from "./ids";
@@ -19,14 +20,35 @@ interface ZoneDraft {
   readonly positions: string;
 }
 
-type Step = "details" | "zones" | "capacity" | "review";
+/** Each step of the wizard is a screen of its own, at the wizard's one route. */
+type Step =
+  | "event.create.details"
+  | "event.create.zones"
+  | "event.create.capacity"
+  | "event.create.review";
 
 const STEPS: readonly { readonly step: Step; readonly title: string }[] = [
-  { step: "details", title: "Details" },
-  { step: "zones", title: "Zones" },
-  { step: "capacity", title: "Capacity" },
-  { step: "review", title: "Review" },
+  { step: "event.create.details", title: "Details" },
+  { step: "event.create.zones", title: "Zones" },
+  { step: "event.create.capacity", title: "Capacity" },
+  { step: "event.create.review", title: "Review" },
 ];
+
+/** Where Next leads from each step, declared as the transitions they are. */
+const NEXT: Readonly<Record<Step, Step | null>> = {
+  "event.create.details": transition("event.create.details", "event.create.zones"),
+  "event.create.zones": transition("event.create.zones", "event.create.capacity"),
+  "event.create.capacity": transition("event.create.capacity", "event.create.review"),
+  "event.create.review": null,
+};
+
+/** Where Back leads from each step. */
+const BACK: Readonly<Record<Step, Step | null>> = {
+  "event.create.details": null,
+  "event.create.zones": transition("event.create.zones", "event.create.details"),
+  "event.create.capacity": transition("event.create.capacity", "event.create.zones"),
+  "event.create.review": transition("event.create.review", "event.create.capacity"),
+};
 
 /** Where a submission is: each stage after `creating` can be retried on its own. */
 type Stage = "creating" | "describing" | "seating" | "reading";
@@ -150,7 +172,7 @@ export function NewEventWizard() {
   const queryClient = useQueryClient();
   const capacityId = useId();
 
-  const [step, setStep] = useState<Step>("details");
+  const [step, setStep] = useState<Step>("event.create.details");
   const [details, setDetails] = useState<EventDetailsDraft>(emptyDetails);
   const [zones, setZones] = useState<readonly ZoneDraft[]>([]);
   const [limited, setLimited] = useState(false);
@@ -195,39 +217,38 @@ export function NewEventWizard() {
     },
     onSuccess: async ({ event }) => {
       await queryClient.invalidateQueries({ queryKey: trpc.derived.events.pathKey() });
-      navigate({ name: "event", event });
+      navigate("event.create.review", "event.detail", { event });
     },
   });
 
   function problemsAt(at: Step): readonly string[] {
     switch (at) {
-      case "details":
+      case "event.create.details":
         return detailsProblems(details);
-      case "zones":
+      case "event.create.zones":
         return zoneProblems(zones);
-      case "capacity":
+      case "event.create.capacity":
         return capacityOf(limited, capacity) === "invalid"
           ? ["Write the capacity as a whole number, or leave capacity unlimited."]
           : [];
-      case "review":
+      case "event.create.review":
         return [...detailsProblems(details), ...zoneProblems(zones)];
     }
   }
 
-  const index = STEPS.findIndex((entry) => entry.step === step);
   function next() {
     const found = problemsAt(step);
     setProblems(found);
-    const following = STEPS[index + 1];
-    if (found.length === 0 && following !== undefined) {
-      setStep(following.step);
+    const following = NEXT[step];
+    if (found.length === 0 && following !== null) {
+      setStep(following);
     }
   }
   function back() {
     setProblems([]);
-    const previous = STEPS[index - 1];
-    if (previous !== undefined) {
-      setStep(previous.step);
+    const previous = BACK[step];
+    if (previous !== null) {
+      setStep(previous);
     }
   }
 
@@ -235,7 +256,7 @@ export function NewEventWizard() {
   const seated = zones.filter((zone) => zone.kind === "Seated");
 
   return (
-    <section className="wizard">
+    <Screen id={step}>
       <h1>New event</h1>
       <ol className="steps">
         {STEPS.map((entry) => (
@@ -251,9 +272,11 @@ export function NewEventWizard() {
         </p>
       ) : null}
 
-      {step === "details" ? <DetailsStep details={details} onChange={setDetails} /> : null}
-      {step === "zones" ? <ZonesStep zones={zones} onChange={setZones} /> : null}
-      {step === "capacity" ? (
+      {step === "event.create.details" ? (
+        <DetailsStep details={details} onChange={setDetails} />
+      ) : null}
+      {step === "event.create.zones" ? <ZonesStep zones={zones} onChange={setZones} /> : null}
+      {step === "event.create.capacity" ? (
         <fieldset>
           <legend>Capacity</legend>
           <p className="hint">
@@ -281,7 +304,7 @@ export function NewEventWizard() {
           ) : null}
         </fieldset>
       ) : null}
-      {step === "review" ? (
+      {step === "event.create.review" ? (
         <div>
           <h2>Review</h2>
           <dl className="facts">
@@ -330,16 +353,16 @@ export function NewEventWizard() {
       ) : null}
 
       <div className="actions">
-        {index > 0 && created === null ? (
+        {BACK[step] !== null && created === null ? (
           <button type="button" onClick={back} disabled={submit.isPending}>
             Back
           </button>
         ) : null}
-        {step === "review" ? (
+        {step === "event.create.review" ? (
           <button
             type="button"
             onClick={() => {
-              const found = problemsAt("review");
+              const found = problemsAt("event.create.review");
               setProblems(found);
               if (found.length === 0) {
                 submit.mutate();
@@ -355,6 +378,6 @@ export function NewEventWizard() {
           </button>
         )}
       </div>
-    </section>
+    </Screen>
   );
 }

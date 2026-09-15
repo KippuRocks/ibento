@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "../api/client";
 import { describeFailure } from "../api/errors";
-import { hrefOf } from "../routing";
+import { Screen } from "../screens/Screen";
+import { ScreenLink } from "../screens/ScreenLink";
 import { eventName } from "./view";
 
 /** The events the organiser's ledger account owns, read from Kippu's derived copy. */
@@ -10,12 +11,12 @@ export function EventsPage() {
   const mine = useQuery(trpc.derived.events.mine.queryOptions());
 
   return (
-    <section>
+    <Screen id="events.list">
       <div className="heading-row">
         <h1>Your events</h1>
-        <a className="button" href={hrefOf({ name: "new-event" })}>
+        <ScreenLink from="events.list" to="event.create.details" params={{}} className="button">
           New event
-        </a>
+        </ScreenLink>
       </div>
       {mine.isPending ? <p>Loading your events…</p> : null}
       {mine.isError ? (
@@ -28,12 +29,14 @@ export function EventsPage() {
         <ul className="events">
           {mine.data.events.map((event) => (
             <li key={event.id}>
-              <a href={hrefOf({ name: "event", event: event.id })}>{eventName(event)}</a>{" "}
+              <ScreenLink from="events.list" to="event.detail" params={{ event: event.id }}>
+                {eventName(event)}
+              </ScreenLink>{" "}
               <span className="status">{event.status}</span>
             </li>
           ))}
         </ul>
       ) : null}
-    </section>
+    </Screen>
   );
 }

@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "../api/client";
 import { describeFailure } from "../api/errors";
 import { ClassesSection } from "../classes/ClassesSection";
-import { hrefOf } from "../routing";
+import { Screen } from "../screens/Screen";
+import { ScreenLink } from "../screens/ScreenLink";
 import { documentText, type EventView, eventName } from "./view";
 
 function SeatPositionCount({ event, zone }: { event: string; zone: string }) {
@@ -71,7 +72,15 @@ function Facts({ event }: { event: EventView }) {
 }
 
 /** One event: its ledger facts, as Kippu's derived copy holds them, and its document. */
-export function EventPage({ event: id }: { event: string }) {
+export function EventPage({ event }: { event: string }) {
+  return (
+    <Screen id="event.detail">
+      <EventDetail event={event} />
+    </Screen>
+  );
+}
+
+function EventDetail({ event: id }: { event: string }) {
   const trpc = useTRPC();
   const read = useQuery(
     trpc.derived.events.get.queryOptions(
@@ -100,9 +109,14 @@ export function EventPage({ event: id }: { event: string }) {
     <section>
       <div className="heading-row">
         <h1>{eventName(event)}</h1>
-        <a className="button" href={hrefOf({ name: "edit-event", event: event.id })}>
+        <ScreenLink
+          from="event.detail"
+          to="event.edit"
+          params={{ event: event.id }}
+          className="button"
+        >
           Edit details
-        </a>
+        </ScreenLink>
       </div>
       {description === null ? null : <p>{description}</p>}
       <Facts event={event} />
