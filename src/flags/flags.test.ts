@@ -6,6 +6,7 @@ describe("admission flags", () => {
     expect(describeCause("same-pass-at-two-gates")).toBe("Same pass admitted at two gates");
     expect(describeCause("transfer-before-recording")).toMatch(/transferred between/);
     expect(describeCause("gate-clock-outside-tolerance")).toBe("Gate clock outside tolerance");
+    expect(describeCause("not-recorded")).toMatch(/never reached the ledger/);
     expect(describeCause("unexplained")).toMatch(/another reason/);
   });
 
@@ -15,6 +16,7 @@ describe("admission flags", () => {
     );
     expect(explainCause("transfer-before-recording")).toMatch(/no longer held the ticket/);
     expect(explainCause("gate-clock-outside-tolerance")).toMatch(/more than 10 seconds/);
+    expect(explainCause("not-recorded")).toMatch(/submission itself may have failed/);
     expect(explainCause("unexplained")).toMatch(/refusal code says why/);
   });
 
