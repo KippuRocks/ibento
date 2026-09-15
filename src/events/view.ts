@@ -1,4 +1,4 @@
-import type { AppRouter } from "@kippu/api";
+import type { AppRouter } from "@kippurocks/api";
 import type { inferRouterOutputs } from "@trpc/server";
 
 type Outputs = inferRouterOutputs<AppRouter>;

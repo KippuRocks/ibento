@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Vendors @kippu/api — the types of the Kippu API's tRPC router, contract C5 (F-020,
+# Vendors @kippurocks/api — the types of the Kippu API's tRPC router, contract C5 (F-020,
 # T-020-04) — from a pinned kippu-api commit, as ticketto-offchain vendors its packages
 # (tools/vendor-kippu-sponsorship.sh there).
 #
@@ -46,7 +46,7 @@ resolved=$(git -C "$work/src" rev-parse HEAD)
   cd "$work/src"
   # The declarations are emitted from the server's router, so the whole workspace installs.
   pnpm install --frozen-lockfile >/dev/null
-  pnpm --filter "@kippu/$package" build >/dev/null
+  pnpm --filter "@kippurocks/$package" build >/dev/null
 )
 
 mkdir -p "$work/packed"

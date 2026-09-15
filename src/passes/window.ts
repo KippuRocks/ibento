@@ -1,4 +1,4 @@
-import type { EventPassWindow } from "@kippu/api";
+import type { EventPassWindow } from "@kippurocks/api";
 
 export type { EventPassWindow };
 

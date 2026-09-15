@@ -1,4 +1,4 @@
-import type { AppRouter } from "@kippu/api";
+import type { AppRouter } from "@kippurocks/api";
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { parsePrice, type SaleAsset } from "../sales/money";
 

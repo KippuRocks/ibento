@@ -17,7 +17,7 @@ reaches Ticketto through `kippu-api`, which exercises the organiser's authority
 on their behalf (`REQ-OA-1`): Ibento never embeds the Ticketto SDK and never
 holds a key.
 
-- **API** — the Kippu API's tRPC router (contract `C5`), typed by `@kippu/api`,
+- **API** — the Kippu API's tRPC router (contract `C5`), typed by `@kippurocks/api`,
   called through `@trpc/client` with TanStack Query (`src/api/client.ts`). A
   failed call carries the `SPEC.md` §10 code, when there is one, in
   `error.data.errorCode`, and Ibento shows it verbatim.
@@ -158,9 +158,9 @@ The development and preview servers forward `/v0/trpc` to a local kippu-api
 at its own origin. How Ibento and kippu-api are served together outside local
 development is a hosting decision that has not been taken.
 
-### `@kippu/api`
+### `@kippurocks/api`
 
-`@kippu/api` is not published to a registry. It is vendored as a `pnpm pack`
+`@kippurocks/api` is not published to a registry. It is vendored as a `pnpm pack`
 tarball from a pinned `kippu-api` commit (`vendor/kippu-api/`):
 `pnpm vendor:kippu-api <commit>` re-pins it, and `pnpm vendor:check` (run in CI)
 rebuilds it at the recorded commit and fails if it differs.
