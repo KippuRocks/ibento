@@ -53,6 +53,17 @@ export const SCREENS = {
     route: "#/events/:event/guests",
     chrome: "console",
   },
+  "event.operators": {
+    title: "Gate access",
+    route: "#/events/:event/operators",
+    chrome: "console",
+  },
+  "operators.list": { title: "Operators", route: "#/operators", chrome: "console" },
+  "operators.enrolment-code": {
+    title: "Enrolment code",
+    route: "#/operators",
+    chrome: "console",
+  },
 } as const satisfies Readonly<Record<string, ScreenDefinition>>;
 
 export type ScreenId = keyof typeof SCREENS;

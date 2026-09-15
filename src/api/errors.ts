@@ -7,14 +7,20 @@ export interface Failure {
   readonly errorCode: string | null;
   /** tRPC's transport class, such as `NOT_FOUND`, when the server answered. */
   readonly transport: string | null;
+  /** A platform refusal's machine-readable reason, such as `unknown-operator`, when there is one. */
+  readonly reason: string | null;
 }
 
 export function failureOf(error: unknown): Failure {
   if (error instanceof TRPCClientError) {
     const typed = error as TRPCClientError<AppRouter>;
-    return { errorCode: typed.data?.errorCode ?? null, transport: typed.data?.code ?? null };
+    return {
+      errorCode: typed.data?.errorCode ?? null,
+      transport: typed.data?.code ?? null,
+      reason: typed.data?.reason ?? null,
+    };
   }
-  return { errorCode: null, transport: null };
+  return { errorCode: null, transport: null, reason: null };
 }
 
 /**

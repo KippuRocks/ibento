@@ -9,7 +9,7 @@ function answered(code: string, errorCode: string | null = null): TRPCClientErro
       error: {
         code: -32600,
         message: "failed",
-        data: { code: code as "NOT_FOUND", httpStatus: 400, errorCode },
+        data: { code: code as "NOT_FOUND", httpStatus: 400, errorCode, reason: null },
       },
     },
   });

@@ -1,17 +1,13 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { addVirtualAuthenticator } from "./support/authenticator";
-import { createEvent, mutate, query, signUpOrganiser } from "./support/organiser";
+import { ledgerRecordsAtMark } from "./support/ledger";
+import { createEvent, query, signUpOrganiser } from "./support/organiser";
 
 /** A 1×1 PNG. */
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
   "base64",
 );
-
-interface Waited {
-  readonly reached: boolean;
-  readonly freshness: { readonly records: number };
-}
 
 interface EventRead {
   readonly event: {
@@ -20,25 +16,6 @@ interface EventRead {
       readonly imagery?: readonly { readonly url: string; readonly alt?: string }[];
     } | null;
   };
-}
-
-function randomZoneId(): string {
-  return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("hex");
-}
-
-/**
- * Writes one ledger record — a zone added — and answers how many records Kippu's
- * derived copy reflects once it has read that write. Between two such marks, the
- * difference counts every ledger record written in between, plus the mark itself.
- */
-async function ledgerRecordsAtMark(page: Page, event: string): Promise<number> {
-  const { cursor } = await mutate<{ cursor: string }>(page, "events.zones.add", {
-    event,
-    zone: { id: randomZoneId(), kind: "Unseated" },
-  });
-  const waited = await query<Waited>(page, "derived.waitFor", { cursor, timeout: 10_000 });
-  expect(waited.reached).toBe(true);
-  return waited.freshness.records;
 }
 
 test.beforeEach(async ({ page }) => {

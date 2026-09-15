@@ -9,6 +9,8 @@ import { EventPage } from "./events/EventPage";
 import { EventsPage } from "./events/EventsPage";
 import { NewEventWizard } from "./events/NewEventWizard";
 import { GuestListPage } from "./guests/GuestListPage";
+import { EventOperatorsPage } from "./operators/EventOperatorsPage";
+import { OperatorsPage } from "./operators/OperatorsPage";
 import { type Location, transition, useLocation } from "./screens/router";
 import { ScreenLink } from "./screens/ScreenLink";
 
@@ -29,6 +31,11 @@ function Page({ location }: { location: Location }) {
     case "event.guests":
     case "event.guests.link":
       return <GuestListPage key={event} event={event} />;
+    case "event.operators":
+      return <EventOperatorsPage key={event} event={event} />;
+    case "operators.list":
+    case "operators.enrolment-code":
+      return <OperatorsPage />;
   }
 }
 
@@ -71,6 +78,9 @@ export function Console({ session }: { session: StoredSession }) {
         <nav>
           <ScreenLink from="chrome:console" to="events.list" params={{}}>
             Your events
+          </ScreenLink>{" "}
+          <ScreenLink from="chrome:console" to="operators.list" params={{}}>
+            Operators
           </ScreenLink>
         </nav>
         <span className="account">

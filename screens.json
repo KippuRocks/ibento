@@ -34,7 +34,8 @@
       "navigatesTo": [
         "auth.sign-in",
         "event.create.details",
-        "event.detail"
+        "event.detail",
+        "operators.list"
       ]
     },
     {
@@ -44,7 +45,8 @@
       "navigatesTo": [
         "auth.sign-in",
         "event.create.zones",
-        "events.list"
+        "events.list",
+        "operators.list"
       ]
     },
     {
@@ -55,7 +57,8 @@
         "auth.sign-in",
         "event.create.capacity",
         "event.create.details",
-        "events.list"
+        "events.list",
+        "operators.list"
       ]
     },
     {
@@ -66,7 +69,8 @@
         "auth.sign-in",
         "event.create.review",
         "event.create.zones",
-        "events.list"
+        "events.list",
+        "operators.list"
       ]
     },
     {
@@ -77,7 +81,8 @@
         "auth.sign-in",
         "event.create.capacity",
         "event.detail",
-        "events.list"
+        "events.list",
+        "operators.list"
       ]
     },
     {
@@ -88,7 +93,9 @@
         "auth.sign-in",
         "event.edit",
         "event.guests",
-        "events.list"
+        "event.operators",
+        "events.list",
+        "operators.list"
       ]
     },
     {
@@ -98,7 +105,8 @@
       "navigatesTo": [
         "auth.sign-in",
         "event.detail",
-        "events.list"
+        "events.list",
+        "operators.list"
       ]
     },
     {
@@ -109,7 +117,8 @@
         "auth.sign-in",
         "event.detail",
         "event.guests.link",
-        "events.list"
+        "events.list",
+        "operators.list"
       ]
     },
     {
@@ -120,7 +129,39 @@
         "auth.sign-in",
         "event.guests",
         "events.list",
+        "operators.list",
         "saifu:invitation.redeem"
+      ]
+    },
+    {
+      "screenId": "event.operators",
+      "route": "#/events/:event/operators",
+      "title": "Gate access",
+      "navigatesTo": [
+        "auth.sign-in",
+        "event.detail",
+        "events.list",
+        "operators.list"
+      ]
+    },
+    {
+      "screenId": "operators.list",
+      "route": "#/operators",
+      "title": "Operators",
+      "navigatesTo": [
+        "auth.sign-in",
+        "events.list",
+        "operators.enrolment-code"
+      ]
+    },
+    {
+      "screenId": "operators.enrolment-code",
+      "route": "#/operators",
+      "title": "Enrolment code",
+      "navigatesTo": [
+        "auth.sign-in",
+        "events.list",
+        "operators.list"
       ]
     }
   ]
