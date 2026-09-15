@@ -12,6 +12,15 @@ import { defineConfig } from "vite";
 const apiTarget = process.env.KIPPU_API_URL ?? "http://127.0.0.1:8080";
 const proxy = { "/v0/trpc": { target: apiTarget, changeOrigin: false } };
 
+// Checked here, so a console built with a malformed Saifu origin fails to build.
+const saifuLinkBase = process.env.SAIFU_LINK_BASE;
+if (saifuLinkBase !== undefined) {
+  const url = URL.canParse(saifuLinkBase) ? new URL(saifuLinkBase) : null;
+  if (url === null || url.protocol !== "https:" || url.origin !== saifuLinkBase) {
+    throw new Error(`SAIFU_LINK_BASE must be an https origin with no path, not ${saifuLinkBase}`);
+  }
+}
+
 export default defineConfig({
   plugins: [react()],
   // SAIFU_LINK_BASE: where invitation links point, until Saifu's handoff defines them.

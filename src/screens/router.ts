@@ -1,5 +1,11 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { type ChromeId, FALLBACK_SCREEN, SCREENS, type ScreenId } from "./registry";
+import {
+  type ChromeId,
+  type ExternalScreenId,
+  FALLBACK_SCREEN,
+  SCREENS,
+  type ScreenId,
+} from "./registry";
 
 type RouteOf<Id extends ScreenId> = (typeof SCREENS)[Id]["route"];
 
@@ -74,11 +80,11 @@ export function hrefOf<Id extends RoutedScreenId>(screen: Id, params: ParamsOf<I
 
 /**
  * Declares a transition from one screen to another that the router does not
- * make: a step in a flow, or a change of session. It answers `to`, so it stands
- * where the transition happens. `tools/screens` reads every call, which must
- * name both screens literally.
+ * make: a step in a flow, a change of session, or a handoff to another app's
+ * screen. It answers `to`, so it stands where the transition happens.
+ * `tools/screens` reads every call, which must name both screens literally.
  */
-export function transition<To extends ScreenId>(
+export function transition<To extends ScreenId | ExternalScreenId>(
   _from: ScreenId | `chrome:${ChromeId}`,
   to: To,
 ): To {

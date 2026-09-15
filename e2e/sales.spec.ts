@@ -82,20 +82,48 @@ test("US-B4 an organiser sets the sale asset and a class price, and both appear 
   read = await inventory(page, event);
   expect(read.classes.map(({ price }) => price)).toEqual([5_000_000]);
 
-  // Until the first hold, the asset can change; the console says what that does to prices.
+  // Until the first hold, the asset can change. A change clears every Purchased class's price,
+  // so the console asks first, and keeping the asset changes nothing.
   const sale = page.getByRole("form", { name: "Sale asset" });
   await sale.getByLabel("Sale asset").selectOption("DUSD/6");
-  await expect(page.getByTestId("asset-change-warning")).toContainText(
-    "General admission at 50000.00 COPM would be 5.000000 DUSD",
-  );
   await sale.getByRole("button", { name: "Set sale asset" }).click();
-  await expect(page.getByTestId("sale-status")).toContainText("Sales are priced in DUSD");
+  const confirmation = page.getByRole("alertdialog", { name: "Confirm the sale asset change" });
+  await expect(confirmation).toContainText(
+    "Changing the sale asset from COPM to DUSD clears the price of every Purchased class: General admission.",
+  );
+  await confirmation.getByRole("button", { name: "Keep COPM" }).click();
+  await expect(confirmation).toHaveCount(0);
+  read = await inventory(page, event);
+  expect(read).toMatchObject({ onSale: true, asset: "COPM/2" });
+  expect(read.classes.map(({ price }) => price)).toEqual([5_000_000]);
+
+  // Changed and cleared: the class needs a price, and the event is not on sale until it has one.
+  await sale.getByLabel("Sale asset").selectOption("DUSD/6");
+  await sale.getByRole("button", { name: "Set sale asset" }).click();
+  await confirmation.getByRole("button", { name: "Change to DUSD and clear prices" }).click();
+  await expect(page.getByTestId("sale-status")).toHaveText(
+    "Sales are priced in DUSD. Not on sale until every Purchased class has a price: General admission.",
+  );
   await expect(
-    page.getByRole("row", { name: /General admission Purchased .* 5\.000000 DUSD$/ }),
+    page.getByRole("row", { name: /General admission Purchased .* Needs a price$/ }),
   ).toBeVisible();
+  await expect(page.getByTestId("unpriced-classes")).toHaveText("General admission");
+  read = await inventory(page, event);
+  expect(read).toMatchObject({ onSale: false, asset: "DUSD/6", classes: [] });
+
+  // Re-priced in the new asset, the event is on sale again.
+  await priceForm.getByLabel("New price of General admission (DUSD)").fill("12.5");
+  await priceForm.getByRole("button", { name: "Set price" }).click();
+  await expect(
+    page.getByRole("row", { name: /General admission Purchased .* 12\.500000 DUSD$/ }),
+  ).toBeVisible();
+  await expect(page.getByTestId("sale-status")).toContainText(
+    "The event is on sale while it is Active.",
+  );
+  await expect(page.getByTestId("unpriced-classes")).toHaveCount(0);
   read = await inventory(page, event);
   expect(read).toMatchObject({ onSale: true, asset: "DUSD/6" });
-  expect(read.classes.map(({ price }) => price)).toEqual([5_000_000]);
+  expect(read.classes.map(({ price }) => price)).toEqual([12_500_000]);
 });
 
 test("an event with no sale asset is not on sale, and a Purchased class cannot be priced until it has one", async ({

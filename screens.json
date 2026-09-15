@@ -119,7 +119,8 @@
       "navigatesTo": [
         "auth.sign-in",
         "event.guests",
-        "events.list"
+        "events.list",
+        "saifu:invitation.redeem"
       ]
     }
   ]

@@ -21,7 +21,8 @@ const PRICE_CHANGE_NOTE =
 
 function priceOf(ticketClass: TicketClass, asset: SaleAsset | null): string {
   if (ticketClass.price === null) {
-    return "Free";
+    // A Purchased class loses its price when the event's sale asset changes.
+    return ticketClass.provenance === "Purchased" ? "Needs a price" : "Free";
   }
   return asset === null
     ? `${ticketClass.price} minor units`
@@ -45,9 +46,11 @@ function PriceForm({
   const change = useMutation(
     trpc.events.classes.setPrice.mutationOptions({
       onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: trpc.events.classes.list.queryKey({ event }),
-        });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: trpc.events.classes.list.queryKey({ event }) }),
+          // Pricing the last unpriced class puts the event back on sale.
+          queryClient.invalidateQueries({ queryKey: trpc.events.saleAsset.queryKey({ event }) }),
+        ]);
         setPrice("");
       },
     }),

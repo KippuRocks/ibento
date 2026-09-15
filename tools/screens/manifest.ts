@@ -1,6 +1,6 @@
 // Builds `screens.json`: Ibento's screen manifest (F-070 plan §5.4).
 
-import { CHROME, SCREENS } from "../../src/screens/registry.ts";
+import { CHROME, EXTERNAL_SCREENS, SCREENS } from "../../src/screens/registry.ts";
 import type { Edge, Extracted, Problem } from "./extract.ts";
 
 /** One screen of the manifest. */
@@ -9,7 +9,10 @@ export interface ManifestScreen {
   /** The route the screen is shown at, as a URL fragment pattern; `null` when it has no URL of its own. */
   readonly route: string | null;
   readonly title: string;
-  /** The screens this screen can navigate to, sorted. */
+  /**
+   * The screens this screen can navigate to, sorted. A screen of another app is
+   * written `<app>:<screenId>`, as that app's manifest names it.
+   */
   readonly navigatesTo: readonly string[];
 }
 
@@ -32,6 +35,7 @@ export function buildManifest(
   extracted: Extracted,
   screens: Registry = SCREENS,
   chrome: Readonly<Record<string, unknown>> = CHROME,
+  externals: readonly string[] = EXTERNAL_SCREENS,
 ): { manifest: Manifest; problems: readonly Problem[] } {
   const problems: Problem[] = [...extracted.problems];
   const targets = new Map<string, Set<string>>(Object.keys(screens).map((id) => [id, new Set()]));
@@ -39,7 +43,8 @@ export function buildManifest(
   const known = (edge: Edge, end: "from" | "to"): boolean => {
     const id = edge[end];
     const isChrome = end === "from" && id.startsWith("chrome:") && id.slice(7) in chrome;
-    if (!isChrome && !(id in screens)) {
+    const isExternal = end === "to" && externals.includes(id);
+    if (!isChrome && !isExternal && !(id in screens)) {
       problems.push({ file: edge.file, line: edge.line, message: `unknown ${end} screen "${id}"` });
       return false;
     }

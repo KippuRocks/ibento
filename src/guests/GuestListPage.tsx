@@ -28,6 +28,8 @@ function zoneName(event: EventView, zone: string): string {
 
 /** Shown once, right after an invitation is created: its token is never shown again. */
 function InvitationLink({ created, onDone }: { created: CreatedLink; onDone: () => void }) {
+  // The guest follows the link to Saifu's invitation screen: an edge between apps.
+  transition("event.guests.link", "saifu:invitation.redeem");
   const linkId = useId();
   const [copied, setCopied] = useState<boolean | null>(null);
   return (
