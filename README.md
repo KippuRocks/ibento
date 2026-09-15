@@ -76,7 +76,15 @@ holds a key.
     not on sale until each is priced again. The page asks before a change that
     would clear prices, names the classes, and marks unpriced ones as needing a
     price.
- — on the event page (`US-B2`): several classes per event
+- **Operators and gate access** (`US-E5`). `#/operators` lists the organiser's
+  operators, the staff who run Iriguchi: add one by name, issue a one-time
+  enrolment code (shown once, with a copy button; a lost code means a new one),
+  and revoke their sessions in one action. `#/events/<id>/operators` grants an
+  operator gates of the event (the organiser's own labels, matched exactly) for
+  a window, and revokes a grant in one action. All of it lives in Kippu: the
+  ledger never learns who an operator is (`REQ-OP-1`), and granting or revoking
+  changes no ledger state (`AC-E5.1`).
+- **Ticket classes** — on the event page (`US-B2`): several classes per event
   (`REQ-TC-1`), each with a name, description, provenance, attendance policy,
   restrictions and an optional quota, defined through `events.classes.define`.
   A `Purchased` class with a restriction is refused by the form before anything
