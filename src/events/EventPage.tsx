@@ -6,6 +6,7 @@ import { PassWindowSection } from "../passes/PassWindowSection";
 import { SaleSection } from "../sales/SaleSection";
 import { Screen } from "../screens/Screen";
 import { ScreenLink } from "../screens/ScreenLink";
+import { CapacitySection } from "./CapacitySection";
 import { LifecycleSection } from "./LifecycleSection";
 import { documentText, type EventView, eventName } from "./view";
 
@@ -148,6 +149,7 @@ function EventDetail({ event: id }: { event: string }) {
       {description === null ? null : <p>{description}</p>}
       <Facts event={event} />
       <LifecycleSection event={event} />
+      <CapacitySection event={event} />
       <PassWindowSection event={event.id} />
       <SaleSection event={event.id} />
       <ClassesSection event={event.id} />

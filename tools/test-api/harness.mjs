@@ -20,6 +20,10 @@
 // error code: Ibento never holds a holder's key, so nothing in Ibento itself could do
 // either. Both act as a holder `/holders` already linked, by its account.
 //
+// It also wires private object storage for capacity-proof artefacts (`T-021-08`), over
+// the same KIPPU_PROOFS_S3_* keys `tools/test-api.sh` sets: without it, a capacity
+// increase request fails before it can be reviewed.
+//
 // The stand-in listens on 127.0.0.1 only, on KIPPU_HOLDER_STANDIN_PORT (default 8089):
 //   POST /holders          →  { "account": "<hex>", "token": "<holder session token>" }
 //   POST /transfers        →  { event, ticket, holder, receiver }
@@ -34,6 +38,7 @@ import { simulatedWebAuthnSigner } from "@ticketto/profile-v0/testing";
 import { loadConfig } from "./dist/config.js";
 import { loadMetadataConfig, loadMetadataPublicUrl } from "./dist/metadata/config.js";
 import { createS3MetadataStorage } from "./dist/metadata/storage.js";
+import { createS3ProofArtefactStorage, loadProofStorageConfig } from "./dist/proofs/artefacts.js";
 import { assertMigrated } from "./dist/store/migrate.js";
 import { createStore } from "./dist/store/store.js";
 import { createServer } from "./dist/wiring.js";
@@ -47,6 +52,10 @@ const storage =
   process.env.KIPPU_METADATA_S3_BUCKET === undefined
     ? undefined
     : createS3MetadataStorage(loadMetadataConfig().storage);
+const proofStorage =
+  process.env.KIPPU_PROOFS_S3_BUCKET === undefined
+    ? undefined
+    : createS3ProofArtefactStorage(loadProofStorageConfig());
 const server = createServer(
   config,
   store,
@@ -54,6 +63,7 @@ const server = createServer(
   {
     metadataPublicUrl: loadMetadataPublicUrl(),
     ...(storage === undefined ? {} : { metadataStorage: storage }),
+    ...(proofStorage === undefined ? {} : { proofStorage }),
   },
 );
 
