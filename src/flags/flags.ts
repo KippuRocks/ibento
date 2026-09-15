@@ -14,6 +14,8 @@ export function describeCause(cause: AdmissionFlagCause): string {
       return "Ticket transferred between the gate's verdict and the ledger's recording";
     case "gate-clock-outside-tolerance":
       return "Gate clock outside tolerance";
+    case "not-recorded":
+      return "Admission never reached the ledger";
     case "unexplained":
       return "Refused by the ledger for another reason";
   }
@@ -31,6 +33,8 @@ export function explainCause(cause: AdmissionFlagCause): string {
       return "The ticket changed hands after the gate admitted its pass and before the ledger recorded the attendance, so the ledger refused the pass: the person admitted no longer held the ticket.";
     case "gate-clock-outside-tolerance":
       return "The gate's clock was more than 10 seconds from Kippu's. A gate judges whether a pass has expired by its own clock, so its verdicts may be wrong until the device's time is corrected.";
+    case "not-recorded":
+      return "The gate reported this admission as submitted, but its window to be recorded has passed and the ledger holds no record of it: the submission itself may have failed.";
     case "unexplained":
       return "The ledger refused this admission for a reason none of the other causes explains. Its refusal code says why.";
   }

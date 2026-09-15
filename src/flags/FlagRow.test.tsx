@@ -18,13 +18,14 @@ const transferred: AdmissionFlag = {
   deviceClock: 1_789_430_001_000,
   receivedAt: 1_789_430_001_200,
   clockDrift: -200,
+  recordingDeadline: null,
   otherReports: [],
   transfers: [{ from: holder, to: receiver, recordedAt: 1_789_430_000_500, sequence: 42 }],
 };
 
 describe("a flagged admission", () => {
-  // The M3 ledger rules record no transfers (T-008-08 is M4), so this cause cannot be
-  // produced end to end against the development ledger yet; its row is checked here.
+  // The end-to-end check of this cause against a real transfer is T-040-14's
+  // (e2e/flags.spec.ts); this test checks the row's rendering in isolation.
   it("REQ-OP-3 shows a transfer between verdict and recording, with the transfer that explains it", () => {
     const html = renderToStaticMarkup(
       <table>
