@@ -14,12 +14,12 @@
 # its rows, so every start begins from an empty store.
 #
 # The Kippu store is PostgreSQL; metadata and capacity-proof storage are S3-compatible
-# (MinIO). CI passes KIPPU_DATABASE_URL and the KIPPU_METADATA_S3_*/KIPPU_PROOFS_S3_*
+# (SeaweedFS S3 gateway). CI passes KIPPU_DATABASE_URL and the KIPPU_METADATA_S3_*/KIPPU_PROOFS_S3_*
 # keys for its own containers. Locally, this script never starts a container of its
 # own — a laptop running several feature worktrees at once cannot spare one per
 # repository. It reuses whatever the machine already has running: the shared Kippu
 # store at KIPPU_DATABASE_URL's default below (one PostgreSQL instance every V0 repo
-# reads and writes its own database on), and shared MinIO on 127.0.0.1:59000. Ibento
+# reads and writes its own database on), and shared SeaweedFS S3 gateway on 127.0.0.1:59000. Ibento
 # gets its own database (dropped and recreated on every start) and its own buckets, so
 # it never disturbs another repo's data on the same shared instances.
 #
@@ -72,7 +72,7 @@ if [[ -z "${KIPPU_DATABASE_URL:-}" ]]; then
   export KIPPU_DATABASE_URL="${shared%/*}/$database"
 fi
 
-# The shared local MinIO (likewise, never started by this script): Ibento's own
+# The shared local SeaweedFS S3 gateway (likewise, never started by this script): Ibento's own
 # buckets, distinct from any other repository's, on whatever endpoint and root
 # credentials it was started with.
 if [[ -z "${KIPPU_METADATA_S3_BUCKET:-}" ]]; then

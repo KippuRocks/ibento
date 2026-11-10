@@ -179,9 +179,9 @@ types Ibento compiles against.
   container. Locally, without it, the script starts kippu-api's own compose
   store and recreates an `ibento_e2e` database there on every start, since the
   in-memory ledger starts empty too.
-- **Metadata storage** — MinIO, an S3-compatible stand-in: CI runs the image
+- **Metadata storage** — SeaweedFS's S3 gateway, an S3-compatible stand-in: CI runs the image
   kippu-api's CI pins by digest and passes the `KIPPU_METADATA_S3_*` keys.
-  Locally, without them, kippu-api's compose file runs MinIO with the
+  Locally, without them, kippu-api's compose file runs SeaweedFS with the
   `kippu-metadata` bucket. `KIPPU_METADATA_PUBLIC_URL` defaults to
   `https://meta.kippu.rocks`, the origin locators name (`AD-22`); no object
   store, CDN or DNS record exists for it yet.
